@@ -1,0 +1,146 @@
+.sidebar {
+  width: 340px;
+  border-left: 1px solid #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 57px);
+}
+
+.sidebar-summary {
+  padding: 20px;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-text {
+  font-size: 13px;
+  color: #bbb;
+  line-height: 1.5;
+}
+
+.summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pacing-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pacing-slow { background: #1a2a1a; color: #4ade80; border: 1px solid #166534; }
+.pacing-medium { background: #2a2a1a; color: #facc15; border: 1px solid #713f12; }
+.pacing-fast { background: #2a1a1a; color: #f87171; border: 1px solid #7f1d1d; }
+
+.duration-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #555;
+}
+
+.sidebar-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.segments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.segment-card {
+  width: 100%;
+  text-align: left;
+  background: #141414;
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  font-family: inherit;
+}
+
+.segment-card:hover {
+  border-color: #7c5cfc;
+  background: #16141f;
+}
+
+.segment-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.segment-time {
+  font-size: 11px;
+  color: #555;
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+}
+
+.cut-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: #f87171;
+  background: #2a1a1a;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid #7f1d1d;
+}
+
+.segment-arrow { color: #333; flex-shrink: 0; }
+
+.segment-caption {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+.segment-note {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.segment-cut-reason {
+  font-size: 12px;
+  color: #f87171;
+}
+
+.overall-notes {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.6;
+}
