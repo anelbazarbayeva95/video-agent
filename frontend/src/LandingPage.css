@@ -123,6 +123,7 @@ button:focus-visible { border-radius: 100px; }
 }
 .va-hero-col-video:nth-child(2) { animation-direction: alternate-reverse; opacity: 0.14; }
 .va-hero-col-video:nth-child(3) { animation-delay: -6s; opacity: 0.16; }
+.va-hero-col-video:nth-child(4) { animation-direction: alternate-reverse; animation-delay: -9s; opacity: 0.13; }
 
 @keyframes heroDrift {
   from { transform: scale(1.04) translateY(-1%); }
