@@ -66,13 +66,15 @@ export default function LandingPage({ onStart }: Props) {
                 <video
                   key={src}
                   className="va-hero-col-video"
-                  src={src}
                   autoPlay
                   muted
                   playsInline
                   loop
+                  preload="auto"
                   style={{ animationDelay: `${i * -4}s` }}
-                />
+                >
+                  <source src={src} type="video/mp4" />
+                </video>
               ))}
             </div>
             <div className="va-hero-veil" />
