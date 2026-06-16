@@ -20,6 +20,8 @@ export type StreamEvent =
   | { type: "result"; data: Analysis }
   | { type: "error"; message: string };
 
+const API = "https://video-agent-production-9eb9.up.railway.app";
+
 export async function analyzeVideo(
   file: File,
   prompt: string,
@@ -29,7 +31,7 @@ export async function analyzeVideo(
   form.append("file", file);
   if (prompt) form.append("prompt", prompt);
 
-  const res = await fetch("http://localhost:8000/analyze", {
+  const res = await fetch(`${API}/analyze`, {
     method: "POST",
     body: form,
   });
@@ -68,7 +70,7 @@ export async function trimVideo(
   form.append("file", file);
   form.append("segments_to_remove", JSON.stringify(segmentsToRemove));
 
-  const res = await fetch("http://localhost:8000/trim", {
+  const res = await fetch(`${API}/trim`, {
     method: "POST",
     body: form,
   });
@@ -92,7 +94,7 @@ export async function getBestFrames(file: File, prompt?: string): Promise<BestFr
   form.append("file", file);
   if (prompt) form.append("prompt", prompt);
 
-  const res = await fetch("http://localhost:8000/best-frames", {
+  const res = await fetch(`${API}/best-frames`, {
     method: "POST",
     body: form,
   });
