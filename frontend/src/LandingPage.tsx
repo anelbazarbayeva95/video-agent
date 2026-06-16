@@ -22,6 +22,7 @@ const FEATURES = [
 
 export default function LandingPage({ onStart }: Props) {
   const [introFaded, setIntroFaded] = useState(false);
+  const [mobileVideoIdx, setMobileVideoIdx] = useState(0);
 
   /* Fade page in after mount */
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function LandingPage({ onStart }: Props) {
 
           {/* Portrait video columns — decorative */}
           <div className="va-hero-bg" aria-hidden="true">
+            {/* Desktop/tablet: all columns */}
             <div className="va-hero-cols">
               {HERO_VIDEOS.map((src, i) => (
                 <video
@@ -77,6 +79,18 @@ export default function LandingPage({ onStart }: Props) {
                 </video>
               ))}
             </div>
+            {/* Mobile: single rotating video */}
+            <video
+              key={HERO_VIDEOS[mobileVideoIdx]}
+              className="va-hero-mobile-video"
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onEnded={() => setMobileVideoIdx(i => (i + 1) % HERO_VIDEOS.length)}
+            >
+              <source src={HERO_VIDEOS[mobileVideoIdx]} type="video/mp4" />
+            </video>
             <div className="va-hero-veil" />
           </div>
 

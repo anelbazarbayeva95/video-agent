@@ -128,6 +128,9 @@ button:focus-visible { border-radius: 100px; }
 .va-hero-col-video:nth-child(3) { animation-delay: -6s; opacity: 0.17; }
 .va-hero-col-video:nth-child(4) { animation-direction: alternate-reverse; animation-delay: -9s; opacity: 0.14; }
 
+/* Mobile single video — hidden on desktop/tablet */
+.va-hero-mobile-video { display: none; }
+
 @keyframes heroDrift {
   from { transform: scale(1.04) translateY(-1%); }
   to   { transform: scale(1.0)  translateY(1%); }
@@ -150,9 +153,8 @@ button:focus-visible { border-radius: 100px; }
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.04em;
-  /* dim but still ~3:1 on near-black bg — decorative/branding */
-  color: rgba(255,255,255,0.09);
-  margin: 0 0 60px;
+  color: rgba(255,255,255,0.28);
+  margin: 0 0 40px;
   user-select: none;
   animation: heroNameIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
@@ -407,7 +409,7 @@ button:focus-visible { border-radius: 100px; }
     opacity: 1 !important;
     transform: none !important;
   }
-  .va-hero-col-video { display: none; animation: none; }  /* pause motion entirely */
+  .va-hero-col-video, .va-hero-mobile-video { display: none !important; animation: none; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -450,6 +452,17 @@ button:focus-visible { border-radius: 100px; }
 
   .va-hero { padding: 88px 20px 56px; }
   .va-hero-name { font-size: clamp(64px, 19vw, 104px); margin-bottom: 36px; }
+  .va-hero-cols { display: none; }
+  .va-hero-mobile-video {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.22;
+    animation: heroDrift 18s ease-in-out infinite alternate;
+  }
   .va-hero-sub  { flex-direction: column; gap: 28px; align-items: flex-start; }
   .va-hero-desc { font-size: 16px; line-height: 1.6; max-width: 100%; }
   .va-hero-desc br { display: none; }
