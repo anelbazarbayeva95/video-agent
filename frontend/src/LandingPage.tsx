@@ -31,7 +31,6 @@ const FEATURES = [
 
 export default function LandingPage({ onStart }: Props) {
   const [introFaded, setIntroFaded] = useState(false);
-  const [mobileVideoIdx, setMobileVideoIdx] = useState(0);
 
   /* Fade page in after mount */
   useEffect(() => {
@@ -69,25 +68,9 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
 
-          {/* Full-bleed background video */}
-          <div className="va-hero-bg" aria-hidden="true">
-            <video
-              key={HERO_VIDEOS_MOBILE[mobileVideoIdx]}
-              className="va-hero-bg-video"
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              onEnded={() => setMobileVideoIdx(i => (i + 1) % HERO_VIDEOS_MOBILE.length)}
-            >
-              <source src={HERO_VIDEOS_MOBILE[mobileVideoIdx]} type="video/mp4" />
-            </video>
-            <div className="va-hero-veil" />
-          </div>
-
           {/* Small portrait thumbnails — top right */}
           <div className="va-hero-thumbs" aria-hidden="true">
-            {HERO_VIDEOS.filter((_, i) => i !== mobileVideoIdx).map((src) => (
+            {HERO_VIDEOS.map((src) => (
               <video key={src} className="va-hero-thumb" autoPlay muted playsInline loop preload="none">
                 <source src={src} type="video/mp4" />
               </video>
