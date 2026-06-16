@@ -59,3 +59,71 @@ export async function analyzeVideo(
     }
   }
 }
+
+export async function trimVideo(
+  file: File,
+  segmentsToRemove: { start: number; end: number }[]
+): Promise<Blob> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("segments_to_remove", JSON.stringify(segmentsToRemove));
+
+  const res = await fetch("http://localhost:8000/trim", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Trim failed");
+  }
+
+  return res.blob();
+}
+
+export interface BestFrame {
+  timestamp: number;
+  reason: string;
+  image_b64: string;
+}
+
+export async function getBestFrames(file: File, prompt?: string): Promise<BestFrame[]> {
+  const form = new FormData();
+  form.append("file", file);
+  if (prompt) form.append("prompt", prompt);
+
+  const res = await fetch("http://localhost:8000/best-frames", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Frame extraction failed");
+  }
+
+  const data = await res.json();
+  return data.frames;
+}
+
+export function exportSRT(segments: Segment[]): string {
+  return segments
+    .map((seg, i) => {
+      const start = toSRTTime(seg.start);
+      const end = toSRTTime(seg.end);
+      return `${i + 1}\n${start} --> ${end}\n${seg.caption}\n`;
+    })
+    .join("\n");
+}
+
+function toSRTTime(s: number): string {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  const ms = Math.round((s % 1) * 1000);
+  return `${pad(h)}:${pad(m)}:${pad(sec)},${pad(ms, 3)}`;
+}
+
+function pad(n: number, len = 2): string {
+  return String(n).padStart(len, "0");
+}

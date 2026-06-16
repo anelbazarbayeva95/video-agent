@@ -1,23 +1,34 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, Play, Zap, RotateCcw } from "lucide-react";
-import { analyzeVideo, Analysis, StreamEvent } from "./api";
+import { Upload, Play, Zap, RotateCcw, Volume2, Scissors, Image } from "lucide-react";
+import { analyzeVideo } from "./api";
+import type { Analysis, StreamEvent } from "./api";
 import Timeline from "./Timeline";
 import ResultsSidebar from "./ResultsSidebar";
+import FramePicker from "./FramePicker";
 import ConfigPanel from "./ConfigPanel";
 import "./App.css";
 
-const DEFAULT_PROMPT = "Analyze this video for editing opportunities, pacing issues, and suggest where to cut.";
+const PROMPTS = {
+  edit: "Analyze this video for editing opportunities, pacing issues, and suggest where to cut.",
+  silence: "Detect all silent pauses, filler words, dead air, and slow sections in this video. Mark every segment where the pacing drops or there is silence longer than 1 second as cut_recommended.",
+  highlights: "Identify the most engaging and high-energy moments in this video. Mark low-energy, repetitive, or off-topic segments as cut_recommended so the highlights can be extracted.",
+};
+
+type RightTab = "edit" | "frames";
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [prompt, setPrompt] = useState(PROMPTS.edit);
+  const [activePreset, setActivePreset] = useState<keyof typeof PROMPTS>("edit");
   const [status, setStatus] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [rightTab, setRightTab] = useState<RightTab>("edit");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -31,6 +42,7 @@ export default function App() {
     setAnalysis(null);
     setError(null);
     setStatus(null);
+    setRightTab("edit");
   }
 
   function reset() {
@@ -40,6 +52,12 @@ export default function App() {
     setError(null);
     setStatus(null);
     setCurrentTime(0);
+    setRightTab("edit");
+  }
+
+  function selectPreset(key: keyof typeof PROMPTS) {
+    setActivePreset(key);
+    setPrompt(PROMPTS[key]);
   }
 
   async function run() {
@@ -69,41 +87,49 @@ export default function App() {
     }
   }
 
+  const showSidebar = !!file;
+
   return (
     <div className="app">
-      <header className="header">
-        <div className="header-brand">
-          <Zap size={20} />
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
+      <header className="header" role="banner">
+        <div className="header-brand" aria-label="Video Agent">
+          <Zap size={20} aria-hidden="true" />
           <span>Video Agent</span>
         </div>
-        <p className="header-sub">Multimodal video analysis powered by Gemini 2.0 Flash</p>
+        <p className="header-sub" aria-hidden="true">Multimodal video analysis powered by Gemini 2.5 Flash</p>
         {videoUrl && (
-          <button className="reset-btn" onClick={reset}>
-            <RotateCcw size={13} /> New video
+          <button className="reset-btn" onClick={reset} aria-label="Start over with a new video">
+            <RotateCcw size={13} aria-hidden="true" /> New video
           </button>
         )}
       </header>
 
-      <main className="main">
+      <main id="main-content" className="main">
         <div className="left-panel">
           {!videoUrl ? (
-            <div
+            <button
               className="dropzone"
               onDrop={onDrop}
               onDragOver={(e) => e.preventDefault()}
-              onClick={() => document.getElementById("file-input")?.click()}
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Upload a video file. Supported formats: mp4, mov, avi, webm, mkv"
             >
-              <Upload size={32} />
+              <Upload size={32} aria-hidden="true" />
               <p>Drop a video or click to upload</p>
-              <span>mp4, mov, avi, webm, mkv</span>
+              <span>mp4 · mov · avi · webm · mkv</span>
               <input
+                ref={fileInputRef}
                 id="file-input"
                 type="file"
                 accept="video/*"
                 hidden
+                aria-hidden="true"
+                tabIndex={-1}
                 onChange={(e) => e.target.files?.[0] && selectFile(e.target.files[0])}
               />
-            </div>
+            </button>
           ) : (
             <div className="video-section">
               <video
@@ -111,12 +137,13 @@ export default function App() {
                 src={videoUrl}
                 controls
                 className="video-player"
+                aria-label={`Uploaded video: ${file?.name}`}
                 onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
               />
 
               {loading && !analysis && (
-                <div className="loading-state">
-                  <div className="loading-bar" />
+                <div className="loading-state" role="status" aria-live="polite">
+                  <div className="loading-bar" aria-hidden="true" />
                   <p className="status">{status}</p>
                 </div>
               )}
@@ -130,30 +157,92 @@ export default function App() {
                 />
               )}
 
+              <div role="group" aria-label="Analysis mode" className="presets">
+                {(["edit", "silence", "highlights"] as const).map((key) => (
+                  <button
+                    key={key}
+                    className={`preset-btn ${activePreset === key ? "active" : ""}`}
+                    onClick={() => selectPreset(key)}
+                    aria-pressed={activePreset === key}
+                  >
+                    {key === "edit" && <Scissors size={12} aria-hidden="true" />}
+                    {key === "silence" && <Volume2 size={12} aria-hidden="true" />}
+                    {key === "highlights" && <Zap size={12} aria-hidden="true" />}
+                    {key === "edit" ? "Edit suggestions" : key === "silence" ? "Remove silence" : "Extract highlights"}
+                  </button>
+                ))}
+              </div>
+
               <div className="controls">
                 <div className="controls-left">
                   <ConfigPanel currentPrompt={prompt} onLoad={setPrompt} />
                 </div>
-                <textarea
-                  className="prompt-input"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  rows={2}
-                  placeholder="Analysis prompt..."
-                />
-                <button className="run-btn" onClick={run} disabled={loading}>
-                  <Play size={16} />
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <label className="prompt-label" htmlFor="analysis-prompt">Analysis prompt</label>
+                  <textarea
+                    id="analysis-prompt"
+                    className="prompt-input"
+                    value={prompt}
+                    onChange={(e) => { setPrompt(e.target.value); setActivePreset("edit"); }}
+                    rows={2}
+                    placeholder="Describe what to analyze..."
+                  />
+                </div>
+                <button
+                  className="run-btn"
+                  onClick={run}
+                  disabled={loading}
+                  aria-label={loading ? "Analyzing video, please wait" : "Run AI analysis"}
+                >
+                  <Play size={16} aria-hidden="true" />
                   {loading ? "Analyzing..." : "Run Agent"}
                 </button>
               </div>
 
-              {!loading && error && <p className="error">{error}</p>}
+              {!loading && error && (
+                <p className="error" role="alert">{error}</p>
+              )}
             </div>
           )}
         </div>
 
-        {analysis && (
-          <ResultsSidebar analysis={analysis} onSeek={seekTo} />
+        {showSidebar && file && (
+          <aside className="sidebar" aria-label="Video tools">
+            {/* Tab bar */}
+            <div className="sidebar-tabs" role="tablist">
+              <button
+                role="tab"
+                aria-selected={rightTab === "edit"}
+                className={`sidebar-tab ${rightTab === "edit" ? "active" : ""}`}
+                onClick={() => setRightTab("edit")}
+              >
+                <Scissors size={13} /> Edit
+              </button>
+              <button
+                role="tab"
+                aria-selected={rightTab === "frames"}
+                className={`sidebar-tab ${rightTab === "frames" ? "active" : ""}`}
+                onClick={() => setRightTab("frames")}
+              >
+                <Image size={13} /> Best Frames
+              </button>
+            </div>
+
+            {rightTab === "edit" && analysis && (
+              <ResultsSidebar analysis={analysis} file={file} onSeek={seekTo} />
+            )}
+
+            {rightTab === "edit" && !analysis && (
+              <div className="sidebar-empty">
+                <Scissors size={28} />
+                <p>Run the agent to see edit suggestions and export options.</p>
+              </div>
+            )}
+
+            {rightTab === "frames" && (
+              <FramePicker file={file} onSeek={seekTo} />
+            )}
+          </aside>
         )}
       </main>
     </div>

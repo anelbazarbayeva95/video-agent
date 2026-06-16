@@ -41,14 +41,22 @@ async def analyze_video(video_bytes: bytes, ext: str, custom_prompt: str = None)
         tmp_path = tmp.name
 
     try:
-        frames = extract_frames(tmp_path)
+        frames, timestamps, duration = extract_frames(tmp_path)
         yield {"type": "status", "message": f"Extracted {len(frames)} frames"}
 
         prompt = custom_prompt or "Analyze this video for editing opportunities."
-        full_prompt = f"{prompt}\n\nAnalyze the frames and return the JSON analysis."
+        full_prompt = (
+            f"{prompt}\n\n"
+            f"The video is {duration:.1f} seconds long. "
+            f"Each frame below is labeled with its exact timestamp. "
+            f"Use these timestamps when setting 'start' and 'end' values in the JSON — "
+            f"segments must span the full {duration:.1f}s duration.\n\n"
+            f"Analyze the frames and return the JSON analysis."
+        )
 
         contents = []
-        for i, frame_b64 in enumerate(frames):
+        for i, (frame_b64, ts) in enumerate(zip(frames, timestamps)):
+            contents.append(types.Part.from_text(text=f"[Frame at {ts:.1f}s]"))
             contents.append(
                 types.Part.from_bytes(
                     data=base64.b64decode(frame_b64),
@@ -58,10 +66,10 @@ async def analyze_video(video_bytes: bytes, ext: str, custom_prompt: str = None)
 
         contents.append(types.Part.from_text(text=full_prompt))
 
-        yield {"type": "status", "message": "Sending to Gemini 2.0 Flash..."}
+        yield {"type": "status", "message": "Sending to Gemini 2.5 Flash..."}
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
@@ -77,6 +85,8 @@ async def analyze_video(video_bytes: bytes, ext: str, custom_prompt: str = None)
         raw = raw.strip()
 
         analysis = json.loads(raw)
+        # Override duration_estimate with the real measured duration
+        analysis["duration_estimate"] = duration
         yield {"type": "result", "data": analysis}
 
     except json.JSONDecodeError as e:
@@ -87,20 +97,24 @@ async def analyze_video(video_bytes: bytes, ext: str, custom_prompt: str = None)
         os.unlink(tmp_path)
 
 
-def extract_frames(video_path: str, fps: float = 1.0) -> list[str]:
+def extract_frames(video_path: str, max_frames: int = 40):
     probe = ffmpeg.probe(video_path)
     duration = float(probe["format"]["duration"])
 
-    frames = []
-    timestamps = [i / fps for i in range(int(duration * fps))]
-    timestamps = timestamps[:30]
+    if duration <= max_frames:
+        timestamps = [float(i) for i in range(int(duration))]
+    else:
+        step = duration / max_frames
+        timestamps = [step * i for i in range(max_frames)]
 
+    frames = []
     for ts in timestamps:
         out, _ = (
             ffmpeg.input(video_path, ss=ts)
-            .output("pipe:", vframes=1, format="image2", vcodec="mjpeg", s="640x360")
+            .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
+                    **{"vf": "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"} )
             .run(capture_stdout=True, capture_stderr=True, quiet=True)
         )
         frames.append(base64.b64encode(out).decode())
 
-    return frames
+    return frames, timestamps, duration

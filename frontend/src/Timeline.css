@@ -1,44 +1,41 @@
-.timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.timeline { display: flex; flex-direction: column; gap: 4px; }
 
 .timeline-track {
   position: relative;
   height: 36px;
-  background: #141414;
+  background: var(--surface2);
   border-radius: 6px;
   cursor: pointer;
   overflow: visible;
-  border: 1px solid #1e1e1e;
+  border: 1px solid var(--border);
 }
+.timeline-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .timeline-segment {
   position: absolute;
   top: 4px;
   height: 28px;
   border-radius: 4px;
-  background: #2a2a4a;
-  border: 1px solid #3a3a6a;
+  background: var(--surface);
+  border: 1px solid var(--border2);
   transition: background 0.15s;
+  cursor: pointer;
 }
-
-.timeline-segment:hover { background: #3a3a6a; }
-.timeline-segment.cut { background: #3a1a1a; border-color: #7f1d1d; }
-.timeline-segment.cut:hover { background: #5a2a2a; }
+.timeline-segment:hover { background: var(--border2); }
+.timeline-segment:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.timeline-segment.cut { background: var(--cut-bg); border-color: var(--cut-b); }
+.timeline-segment.cut:hover { background: #3a1a1a; }
 
 .cut-marker {
   position: absolute;
   top: -4px;
   width: 2px;
   height: 44px;
-  background: #f87171;
+  background: #fca5a5;
   border-radius: 1px;
   cursor: pointer;
   z-index: 10;
 }
-
 .cut-marker::before {
   content: "✂";
   position: absolute;
@@ -46,7 +43,7 @@
   left: 50%;
   transform: translateX(-50%);
   font-size: 10px;
-  color: #f87171;
+  color: #fca5a5;
 }
 
 .playhead {
@@ -54,17 +51,24 @@
   top: -2px;
   width: 2px;
   height: 40px;
-  background: #7c5cfc;
+  background: var(--accent);
   border-radius: 1px;
   pointer-events: none;
   z-index: 20;
   transition: left 0.1s linear;
 }
+@media (prefers-reduced-motion: reduce) { .playhead { transition: none; } }
 
 .timeline-labels {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #444;
+  color: var(--text-3);
   padding: 0 2px;
+}
+
+@media (max-width: 768px) {
+  .timeline-track { height: 44px; }
+  .timeline-segment { top: 6px; height: 32px; }
+  .playhead { height: 48px; top: -2px; }
 }
