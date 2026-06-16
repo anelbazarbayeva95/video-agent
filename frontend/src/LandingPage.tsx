@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./LandingPage.css";
 
 interface Props { onStart: () => void; }
 
-/* 16:9 landscape videos only */
+/* Portrait hero videos from Cloudinary */
 const HERO_VIDEOS = [
-  "13336317_2160_3840_30fps.mp4",
-  "7330045-uhd_2160_3840_25fps.mp4",
-  "6948592-uhd_2160_3840_24fps.mp4",
-  "13361161_2160_3840_60fps.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584042/15368424_1080_1920_60fps_lcwyvy.mp4",
 ];
 
 const FEATURES = [
@@ -22,8 +21,6 @@ const FEATURES = [
 
 export default function LandingPage({ onStart }: Props) {
   const [introFaded, setIntroFaded] = useState(false);
-  const [videoIdx, setVideoIdx] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   /* Fade page in after mount */
   useEffect(() => {
@@ -41,11 +38,6 @@ export default function LandingPage({ onStart }: Props) {
     els.forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
-
-  /* Cycle to next video when current ends */
-  function handleVideoEnded() {
-    setVideoIdx(i => (i + 1) % HERO_VIDEOS.length);
-  }
 
   return (
     <div className={`va-landing ${introFaded ? "intro-ready" : ""}`}>
@@ -66,18 +58,22 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
 
-          {/* Background video — decorative */}
+          {/* Portrait video columns — decorative */}
           <div className="va-hero-bg" aria-hidden="true">
-            <video
-              ref={videoRef}
-              key={HERO_VIDEOS[videoIdx]}
-              className="va-hero-video"
-              src={`/${HERO_VIDEOS[videoIdx]}`}
-              autoPlay
-              muted
-              playsInline
-              onEnded={handleVideoEnded}
-            />
+            <div className="va-hero-cols">
+              {HERO_VIDEOS.map((src, i) => (
+                <video
+                  key={src}
+                  className="va-hero-col-video"
+                  src={src}
+                  autoPlay
+                  muted
+                  playsInline
+                  loop
+                  style={{ animationDelay: `${i * -4}s` }}
+                />
+              ))}
+            </div>
             <div className="va-hero-veil" />
           </div>
 
