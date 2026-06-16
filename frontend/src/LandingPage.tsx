@@ -5,10 +5,10 @@ interface Props { onStart: () => void; }
 
 /* Portrait hero videos from Cloudinary */
 const HERO_VIDEOS = [
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584042/15368424_1080_1920_60fps_lcwyvy.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/v1781584058/8503684-uhd_2160_3840_24fps_slhers.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/v1781584058/8503684-uhd_2160_3840_24fps_slhers.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/v1781584042/7534415-uhd_2160_4096_25fps_laqmn9.mp4",
 ];
 
 const FEATURES = [
