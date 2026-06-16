@@ -112,7 +112,7 @@ button:focus-visible { border-radius: 100px; }
   inset: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 0;
 }
 
 .va-hero-col-video {
