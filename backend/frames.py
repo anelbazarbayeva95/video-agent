@@ -49,11 +49,13 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
         # Extract frames
         raw_frames = []
         for ts in timestamps:
-            out, _ = (
+            out, err = (
                 ffmpeg.input(tmp_path, ss=ts)
                 .output("pipe:", vframes=1, format="image2", vcodec="mjpeg", **{"q:v": "1"})
-                .run(capture_stdout=True, capture_stderr=True, quiet=True)
+                .run(capture_stdout=True, capture_stderr=True)
             )
+            if not out:
+                raise RuntimeError(f"ffmpeg produced no output at {ts}s: {err.decode()}")
             raw_frames.append((ts, out))
 
         # Ask Gemini which frames are best
