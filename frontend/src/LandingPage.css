@@ -90,8 +90,8 @@ button:focus-visible { border-radius: 100px; }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 120px 48px 72px;
+  justify-content: center;
+  padding: 140px 48px 80px;
   overflow: hidden;
   background:
     radial-gradient(ellipse 80% 60% at 70% 20%, rgba(0,120,140,0.28) 0%, transparent 65%),
@@ -99,49 +99,17 @@ button:focus-visible { border-radius: 100px; }
     linear-gradient(160deg, #060e14 0%, #0a1520 40%, #06090d 100%);
 }
 
-/* Giant watermark name — spans full width */
+/* Heading — in-flow, top of hero content */
 .va-hero-name {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  font-size: clamp(80px, 15.5vw, 210px);
+  font-size: clamp(64px, 12vw, 160px);
   font-weight: 700;
-  line-height: 0.88;
-  letter-spacing: -0.03em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255,255,255,0.18);
-  white-space: nowrap;
-  overflow: hidden;
-  padding: 0 40px 32px;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: #fff;
+  margin: 0 0 36px;
   user-select: none;
-  z-index: 1;
   animation: heroNameIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
-
-/* Small portrait thumbnails — top right */
-.va-hero-thumbs {
-  position: absolute;
-  top: 72px;
-  right: 160px;
-  display: flex;
-  gap: 6px;
-  z-index: 2;
-  animation: heroSubIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-}
-
-.va-hero-thumb {
-  width: 52px;
-  height: 76px;
-  border-radius: 6px;
-  object-fit: cover;
-  object-position: center top;
-  opacity: 0.75;
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: opacity 0.2s, transform 0.2s;
-  display: block;
-}
-.va-hero-thumb:hover { opacity: 1; transform: scale(1.04); }
 
 @keyframes heroDrift {
   from { transform: scale(1.06) translateY(-1%); }
@@ -154,14 +122,11 @@ button:focus-visible { border-radius: 100px; }
 }
 
 .va-hero-sub {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 28px;
   max-width: 480px;
-  margin-bottom: 180px;
   animation: heroSubIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
 }
 
@@ -415,9 +380,8 @@ button:focus-visible { border-radius: 100px; }
   .va-nav  { padding: 22px 32px; }
 
   .va-hero { padding: 100px 32px 70px; }
-  .va-hero-name { font-size: clamp(60px, 12vw, 130px); padding: 0 24px 24px; }
-  .va-hero-thumbs { top: 72px; right: 32px; }
-  .va-hero-sub  { flex-direction: column; gap: 32px; align-items: flex-start; margin-bottom: 160px; }
+  .va-hero-name { font-size: clamp(52px, 10vw, 110px); margin-bottom: 28px; }
+  .va-hero-sub  { gap: 24px; }
   .va-hero-desc { font-size: 17px; }
 
   .va-divider { margin: 0 32px; }
@@ -446,10 +410,8 @@ button:focus-visible { border-radius: 100px; }
   .va-nav-btn  { padding: 9px 18px; font-size: 13px; }
 
   .va-hero { padding: 88px 20px 56px; }
-  .va-hero-name { font-size: clamp(52px, 16vw, 90px); padding: 0 16px 20px; }
-  .va-hero-thumbs { top: 64px; right: 20px; gap: 4px; }
-  .va-hero-thumb { width: 38px; height: 56px; }
-  .va-hero-sub  { flex-direction: column; gap: 28px; align-items: flex-start; margin-bottom: 120px; }
+  .va-hero-name { font-size: clamp(44px, 13vw, 80px); margin-bottom: 24px; }
+  .va-hero-sub  { gap: 22px; }
   .va-hero-desc { font-size: 16px; line-height: 1.6; max-width: 100%; }
   .va-hero-desc br { display: none; }
 

@@ -68,15 +68,6 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
 
-          {/* Small portrait thumbnails — top right */}
-          <div className="va-hero-thumbs" aria-hidden="true">
-            {HERO_VIDEOS.map((src) => (
-              <video key={src} className="va-hero-thumb" autoPlay muted playsInline loop preload="none">
-                <source src={src} type="video/mp4" />
-              </video>
-            ))}
-          </div>
-
           <h1 id="va-hero-heading" className="va-hero-name" aria-label="Video Agent">
             Video Agent
           </h1>
