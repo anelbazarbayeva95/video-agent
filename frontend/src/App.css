@@ -23,6 +23,7 @@
   white-space: nowrap;
 }
 .header-brand svg { color: var(--text-2); }
+button.header-brand { background: none; border: none; padding: 0; cursor: pointer; }
 
 .header-sub {
   font-size: 13px;

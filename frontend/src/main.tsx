@@ -6,7 +6,9 @@ import LandingPage from './LandingPage.tsx'
 
 function Root() {
   const [started, setStarted] = useState(false)
-  return started ? <App /> : <LandingPage onStart={() => setStarted(true)} />
+  return started
+    ? <App onBack={() => setStarted(false)} />
+    : <LandingPage onStart={() => setStarted(true)} />
 }
 
 createRoot(document.getElementById('root')!).render(

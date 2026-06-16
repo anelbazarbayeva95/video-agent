@@ -16,7 +16,7 @@ const PROMPTS = {
 
 type RightTab = "edit" | "frames";
 
-export default function App() {
+export default function App({ onBack }: { onBack?: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(PROMPTS.edit);
@@ -94,10 +94,10 @@ export default function App() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
 
       <header className="header" role="banner">
-        <div className="header-brand" aria-label="Video Agent">
+        <button className="header-brand" onClick={onBack} aria-label="Go back to home">
           <Zap size={20} aria-hidden="true" />
           <span>Video Agent</span>
-        </div>
+        </button>
         <p className="header-sub" aria-hidden="true">Multimodal video analysis powered by Gemini 2.5 Flash</p>
         {videoUrl && (
           <button className="reset-btn" onClick={reset} aria-label="Start over with a new video">
