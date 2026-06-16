@@ -11,6 +11,14 @@ const HERO_VIDEOS = [
   "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/v1781584042/7534415-uhd_2160_4096_25fps_laqmn9.mp4",
 ];
 
+/* Lower-res versions for single-video on tablet/mobile */
+const HERO_VIDEOS_MOBILE = [
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584058/8503684-uhd_2160_3840_24fps_slhers.mp4",
+  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584042/7534415-uhd_2160_4096_25fps_laqmn9.mp4",
+];
+
 const FEATURES = [
   { num: "01", title: "AI scene analysis",  desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing notes and cut recommendations." },
   { num: "02", title: "Trim & export",       desc: "Select segments to remove. One click exports a clean MP4 — no timeline, no editor." },
@@ -81,15 +89,15 @@ export default function LandingPage({ onStart }: Props) {
             </div>
             {/* Mobile: single rotating video */}
             <video
-              key={HERO_VIDEOS[mobileVideoIdx]}
+              key={HERO_VIDEOS_MOBILE[mobileVideoIdx]}
               className="va-hero-mobile-video"
               autoPlay
               muted
               playsInline
               preload="auto"
-              onEnded={() => setMobileVideoIdx(i => (i + 1) % HERO_VIDEOS.length)}
+              onEnded={() => setMobileVideoIdx(i => (i + 1) % HERO_VIDEOS_MOBILE.length)}
             >
-              <source src={HERO_VIDEOS[mobileVideoIdx]} type="video/mp4" />
+              <source src={HERO_VIDEOS_MOBILE[mobileVideoIdx]} type="video/mp4" />
             </video>
             <div className="va-hero-veil" />
           </div>
