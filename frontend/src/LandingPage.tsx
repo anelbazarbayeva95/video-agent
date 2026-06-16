@@ -4,21 +4,6 @@ import "./LandingPage.css";
 interface Props { onStart: () => void; }
 
 /* Portrait hero videos from Cloudinary */
-/* Desktop: 4 columns, each ~320px wide — cap at w_480 */
-const HERO_VIDEOS = [
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_480/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_480/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_480/v1781584058/8503684-uhd_2160_3840_24fps_slhers.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_480/v1781584042/7534415-uhd_2160_4096_25fps_laqmn9.mp4",
-];
-
-/* Tablet/mobile: single full-screen video — cap at w_720 */
-const HERO_VIDEOS_MOBILE = [
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584057/10637183-uhd_2160_4096_25fps_kqdpoq.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584065/8323035-uhd_2160_4096_25fps_qnjj2i.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584058/8503684-uhd_2160_3840_24fps_slhers.mp4",
-  "https://res.cloudinary.com/doj3vlkhr/video/upload/q_auto/f_auto/w_720/v1781584042/7534415-uhd_2160_4096_25fps_laqmn9.mp4",
-];
 
 const FEATURES = [
   { num: "01", title: "AI scene analysis",  desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing notes and cut recommendations." },
