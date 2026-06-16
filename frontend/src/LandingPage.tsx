@@ -69,29 +69,11 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
 
-          {/* Portrait video columns — decorative */}
+          {/* Full-bleed background video */}
           <div className="va-hero-bg" aria-hidden="true">
-            {/* Desktop/tablet: all columns */}
-            <div className="va-hero-cols">
-              {HERO_VIDEOS.map((src, i) => (
-                <video
-                  key={src}
-                  className="va-hero-col-video"
-                  autoPlay
-                  muted
-                  playsInline
-                  loop
-                  preload="auto"
-                  style={{ animationDelay: `${i * -4}s` }}
-                >
-                  <source src={src} type="video/mp4" />
-                </video>
-              ))}
-            </div>
-            {/* Mobile: single rotating video */}
             <video
               key={HERO_VIDEOS_MOBILE[mobileVideoIdx]}
-              className="va-hero-mobile-video"
+              className="va-hero-bg-video"
               autoPlay
               muted
               playsInline
@@ -103,8 +85,17 @@ export default function LandingPage({ onStart }: Props) {
             <div className="va-hero-veil" />
           </div>
 
+          {/* Small portrait thumbnails — top right */}
+          <div className="va-hero-thumbs" aria-hidden="true">
+            {HERO_VIDEOS.filter((_, i) => i !== mobileVideoIdx).map((src) => (
+              <video key={src} className="va-hero-thumb" autoPlay muted playsInline loop preload="none">
+                <source src={src} type="video/mp4" />
+              </video>
+            ))}
+          </div>
+
           <h1 id="va-hero-heading" className="va-hero-name" aria-label="Video Agent">
-            Video<br />Agent
+            Video Agent
           </h1>
           <div className="va-hero-sub">
             <p className="va-hero-desc">
