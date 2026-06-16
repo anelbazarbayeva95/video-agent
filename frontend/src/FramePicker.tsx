@@ -15,9 +15,6 @@ function formatTime(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-function baseFileName(file: File) {
-  return file.name.replace(/\.[^/.]+$/, "").replace(/\s+/g, "_");
-}
 
 export default function FramePicker({ file, onSeek }: Props) {
   const [frames, setFrames] = useState<BestFrame[]>([]);
@@ -54,7 +51,7 @@ export default function FramePicker({ file, onSeek }: Props) {
     });
   }
 
-  function frameFileName(frame: BestFrame, index: number) {
+  function frameFileName(_frame: BestFrame, index: number) {
     return `image_${index + 1}.jpg`;
   }
 
