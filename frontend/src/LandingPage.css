@@ -90,10 +90,13 @@ button:focus-visible { border-radius: 100px; }
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 120px 48px 80px;
+  justify-content: flex-end;
+  padding: 120px 48px 72px;
   overflow: hidden;
 }
+
+/* Hero name sits above the sub row */
+.va-hero-name { margin-bottom: 40px; }
 
 /* Background video columns */
 .va-hero-bg {
