@@ -328,7 +328,7 @@ button:focus-visible { border-radius: 100px; }
   padding: 44px 0;
   border-top: 1px solid var(--border);
 }
-.va-steps > .va-step:last-child { border-bottom: 1px solid var(--border); }
+.va-steps > .va-step:last-child { border-bottom: none; }
 
 /* Step num is aria-hidden */
 .va-step-num {
