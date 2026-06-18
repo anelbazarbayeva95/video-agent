@@ -192,7 +192,9 @@
   border-bottom: 1px solid rgba(0,0,0,0.08);
   border-right: 1px solid rgba(0,0,0,0.08);
 }
-.va-feat:nth-child(3n) { border-right: none; padding-right: 0; }
+.va-feat:nth-child(3n+2),
+.va-feat:nth-child(3n)   { padding-left: 28px; }
+.va-feat:nth-child(3n)   { border-right: none; padding-right: 0; }
 .va-feat:nth-last-child(-n+3) { border-bottom: none; }
 
 .va-feat-num {
@@ -291,6 +293,86 @@
   align-items: center;
   font-size: 13px;
   color: rgba(13,13,13,0.38);
+}
+
+/* ── Dynamic heading word ────────────────────────────── */
+.va-hero-word {
+  display: inline-block;
+  color: #c4b5fd;
+  animation: wordSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes wordSlideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Card entrance ───────────────────────────────────── */
+.va-card {
+  animation: cardIn 0.55s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Waveform bars ───────────────────────────────────── */
+.va-wbar {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: barPulse 1.6s ease-in-out infinite alternate;
+}
+@keyframes barPulse {
+  0%   { transform: scaleY(1);    opacity: 1; }
+  100% { transform: scaleY(0.35); opacity: 0.4; }
+}
+
+/* ── Grid dots ───────────────────────────────────────── */
+.va-grid-dot {
+  animation: dotFade 2.4s ease-in-out infinite alternate;
+}
+@keyframes dotFade {
+  0%   { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+.va-grid-active {
+  animation: activePulse 2s ease-in-out infinite alternate;
+}
+@keyframes activePulse {
+  0%   { opacity: 1;    fill: #c4b5fd; }
+  100% { opacity: 0.65; fill: #a78bfa; }
+}
+
+/* ── Caption lines ───────────────────────────────────── */
+.va-line-bar {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: lineGrow 1.8s ease-in-out infinite alternate;
+}
+@keyframes lineGrow {
+  0%   { transform: scaleX(1);    opacity: 1; }
+  100% { transform: scaleX(0.55); opacity: 0.4; }
+}
+
+/* ── Arrow pulse ─────────────────────────────────────── */
+.va-arrow-ring  { animation: ringPulse 2.4s ease-in-out infinite alternate; }
+.va-arrow-ring2 { animation: ringPulse 2.4s ease-in-out infinite alternate; animation-delay: 0.5s; }
+@keyframes ringPulse {
+  0%   { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+.va-arrow-path { animation: arrowSlide 2.4s ease-in-out infinite; }
+@keyframes arrowSlide {
+  0%,100% { transform: translateX(0); opacity: 1; }
+  45%     { transform: translateX(4px); opacity: 0.7; }
+  50%     { transform: translateX(-6px); opacity: 0; }
+  55%     { transform: translateX(-6px); opacity: 0; }
+  60%     { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .va-wbar, .va-grid-dot, .va-grid-active, .va-line-bar,
+  .va-arrow-ring, .va-arrow-ring2, .va-arrow-path,
+  .va-card, .va-hero-word { animation: none; }
 }
 
 /* ── Scroll reveal ───────────────────────────────────── */

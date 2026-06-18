@@ -137,7 +137,7 @@ button.header-brand:hover { opacity: 0.7; }
   .loading-bar { animation: none; background: rgba(196,181,253,0.3); }
 }
 
-.status { font-size: 13px; color: #7c3aed; opacity: 0.8; }
+.status { font-size: 13px; color: #6d28d9; }
 .error  { font-size: 13px; color: #dc2626; padding: 4px 0; }
 
 /* ── Presets ─────────────────────────────────────────── */
@@ -270,7 +270,7 @@ button.header-brand:hover { opacity: 0.7; }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  color: rgba(13,13,13,0.3);
+  color: rgba(13,13,13,0.52);
   padding: 48px 24px;
   text-align: center;
   font-size: 13px;
