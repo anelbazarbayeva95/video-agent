@@ -20,7 +20,7 @@
 body {
   margin: 0;
   font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
-  background: var(--bg);
+  background: #f7f6f2;
   color: var(--text-1);
   -webkit-font-smoothing: antialiased;
 }

@@ -1,90 +1,48 @@
-/* ═══════════════════════════════════════════════════════
-   VARIABLES — contrast-safe against #000
-   text        #fff   21.0 : 1  AAA
-   text-dim    #a0a0a0 6.0 : 1  AA
-   text-muted  #666    5.7 : 1  AA  (large text only ≥ 18pt)
-   text-faint  #555    5.2 : 1  AA  (large text only ≥ 18pt)
-   All non-decorative body copy uses text or text-dim.
-   Section labels (11px uppercase) are aria-hidden — purely decorative.
-   ══════════════════════════════════════════════════════ */
+/* ── Base ────────────────────────────────────────────── */
 .va-landing {
-  --bg:          #000;
-  --text:        #fff;
-  --text-dim:    rgba(255,255,255,0.62); /* ≈ #9e9e9e  6.1:1 AA ✓ */
-  --text-faint:  rgba(255,255,255,0.38); /* ≈ #616161 — decorative only, aria-hidden */
-  --border:      rgba(255,255,255,0.09);
-  --focus-ring:  #fff;
-
-  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
-  background: #060e14;
-  color: var(--text);
+  background: #f7f6f2;
+  color: #0d0d0d;
   min-height: 100vh;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
-
-/* ── Intro fade ─────────────────────────────────────── */
-.va-landing { opacity: 0; transition: opacity 0.5s ease; }
 .va-landing.intro-ready { opacity: 1; }
 
-/* ── Skip link — WCAG 2.4.1 ─────────────────────────── */
 .va-skip {
-  position: absolute;
-  top: -9999px; left: 16px;
-  z-index: 9999;
-  background: #fff;
-  color: #000;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-family: inherit;
+  position: absolute; top: -9999px; left: 16px; z-index: 9999;
+  background: #0d0d0d; color: #f7f6f2;
+  font-size: 14px; font-weight: 600;
+  padding: 10px 18px; border-radius: 6px;
+  text-decoration: none; font-family: inherit;
 }
 .va-skip:focus { top: 16px; }
 
-/* ── Focus styles — WCAG 2.4.7 ──────────────────────── */
-*:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-button:focus-visible { border-radius: 100px; }
-
 /* ── Nav ─────────────────────────────────────────────── */
 .va-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   padding: 20px 48px;
-  background: rgba(6, 14, 20, 0.7);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(247,246,242,0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
 .va-nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #fff;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 700; letter-spacing: -0.02em;
+  color: #0d0d0d;
 }
 
 .va-nav-btn {
   background: #c4b5fd;
   color: #000;
-  border: none;
-  border-radius: 100px;
+  border: none; border-radius: 100px;
   padding: 10px 22px;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  letter-spacing: 0.02em;
+  font-size: 13px; font-weight: 600;
+  font-family: inherit; letter-spacing: 0.02em;
   cursor: pointer;
   transition: opacity 0.18s;
 }
@@ -92,141 +50,45 @@ button:focus-visible { border-radius: 100px; }
 
 /* ── Hero ────────────────────────────────────────────── */
 .va-hero {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 140px 48px 80px;
-  overflow: hidden;
-  background: transparent;
+  padding: 140px 48px 48px;
 }
 
-/* Floating orbs — fixed to viewport, visible across all sections */
-.va-orbs {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+.va-hero-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  margin-bottom: 20px;
 }
 
-/* Ensure all page content sits above orbs */
-#va-main, .va-footer { position: relative; z-index: 1; }
-
-.va-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-}
-
-.va-orb-1 {
-  width: 520px; height: 520px;
-  background: radial-gradient(circle, rgba(196,181,253,0.18), transparent 70%);
-  top: -140px; right: 5%;
-  animation: orbDrift1 12s ease-in-out infinite;
-}
-.va-orb-2 {
-  width: 380px; height: 380px;
-  background: radial-gradient(circle, rgba(139,92,246,0.22), transparent 70%);
-  bottom: -80px; left: -60px;
-  animation: orbDrift2 15s ease-in-out infinite;
-}
-.va-orb-3 {
-  width: 260px; height: 260px;
-  background: radial-gradient(circle, rgba(196,181,253,0.12), transparent 70%);
-  top: 30%; right: 30%;
-  animation: orbDrift3 18s ease-in-out infinite;
-}
-.va-orb-4 {
-  width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%);
-  top: 15%; left: 30%;
-  animation: orbDrift1 22s ease-in-out infinite reverse;
-}
-
-@keyframes orbDrift1 {
-  0%, 100% { transform: translate(0, 0); }
-  33%       { transform: translate(40px, -30px); }
-  66%       { transform: translate(-20px, 20px); }
-}
-@keyframes orbDrift2 {
-  0%, 100% { transform: translate(0, 0); }
-  33%       { transform: translate(-35px, 25px); }
-  66%       { transform: translate(25px, -15px); }
-}
-@keyframes orbDrift3 {
-  0%, 100% { transform: translate(0, 0); }
-  50%       { transform: translate(30px, 40px); }
-}
-
-/* Heading — in-flow, top of hero content */
 .va-hero-name {
-  position: relative;
-  z-index: 1;
-  font-size: clamp(64px, 12vw, 160px);
+  font-size: clamp(52px, 9vw, 120px);
   font-weight: 700;
-  line-height: 0.92;
+  line-height: 0.94;
   letter-spacing: -0.04em;
-  color: #fff;
-  margin: 0 0 36px;
-  user-select: none;
-  animation: heroNameIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  color: #0d0d0d;
+  margin: 0 0 32px;
 }
 
-@keyframes heroDrift {
-  from { transform: scale(1.06) translateY(-1%); }
-  to   { transform: scale(1.0)  translateY(1%); }
-}
-
-@keyframes heroNameIn {
-  from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.va-hero-sub {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 28px;
-  max-width: 480px;
-  animation: heroSubIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
-}
-
-@keyframes heroSubIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Body text: --text-dim ≈ 6.1:1 → AA ✓ */
 .va-hero-desc {
-  font-size: 18px;
-  font-weight: 400;
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: rgba(13,13,13,0.55);
+  max-width: 480px;
   line-height: 1.65;
-  color: var(--text-dim);
-  margin: 0;
-  max-width: 420px;
+  margin-bottom: 36px;
 }
 
 .va-hero-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
 }
 
-/* Primary button: black text on white — 21:1 AAA */
 .va-btn-primary {
   background: #c4b5fd;
   color: #000;
-  border: none;
-  border-radius: 100px;
+  border: none; border-radius: 100px;
   padding: 16px 34px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 15px; font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.18s, transform 0.18s;
@@ -235,280 +97,240 @@ button:focus-visible { border-radius: 100px; }
 .va-btn-primary:hover { opacity: 0.86; transform: translateY(-1px); }
 .va-btn-primary.large { padding: 20px 44px; font-size: 16px; }
 
-/* Note: purely supplementary label, aria-label on parent covers it */
 .va-hero-note {
+  font-size: 13px;
+  color: rgba(13,13,13,0.38);
+  letter-spacing: 0.02em;
+}
+
+/* ── Cards ───────────────────────────────────────────── */
+.va-cards-section {
+  padding: 0 48px 80px;
+}
+
+.va-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.va-card {
+  background: #0d0d0d;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.va-card-visual {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px 16px;
+}
+
+.va-card-body {
+  padding: 16px 20px 20px;
+}
+
+.va-card-phrase {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.va-card-sub {
   font-size: 12px;
-  color: var(--text-faint);
-  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.38);
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* ── Divider ─────────────────────────────────────────── */
 .va-divider {
   height: 1px;
-  background: var(--border);
+  background: rgba(0,0,0,0.08);
   margin: 0 48px;
 }
 
 /* ── Sections ────────────────────────────────────────── */
-.va-section { padding: 120px 48px; }
-
-/* Section label is aria-hidden — decorative heading */
-.va-section-label {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin-bottom: 40px;
+.va-section {
+  padding: 80px 48px;
 }
 
-/* Section headings: #fff — 21:1 AAA */
+.va-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(13,13,13,0.35);
+  margin-bottom: 24px;
+}
+
 .va-section-hed {
-  font-size: clamp(44px, 6vw, 80px);
+  font-size: clamp(36px, 5vw, 64px);
   font-weight: 700;
-  line-height: 1.0;
   letter-spacing: -0.03em;
-  margin: 0 0 80px;
-  color: #fff;
+  line-height: 1.0;
+  color: #0d0d0d;
+  margin: 0 0 56px;
 }
 
 /* ── Feature grid ────────────────────────────────────── */
 .va-feat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--border);
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  gap: 0;
 }
 
 .va-feat {
-  padding: 48px 40px;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  padding: 28px 28px 28px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-right: 1px solid rgba(0,0,0,0.08);
 }
-.va-feat:nth-child(3n) { border-right: none; }
+.va-feat:nth-child(3n) { border-right: none; padding-right: 0; }
 .va-feat:nth-last-child(-n+3) { border-bottom: none; }
 
-/* Feature num is aria-hidden */
 .va-feat-num {
   display: block;
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--text-faint);
-  margin-bottom: 28px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #c4b5fd;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* h3: #fff 21:1 AAA */
 .va-feat-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 12px;
-  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d0d0d;
+  margin: 0 0 8px;
   letter-spacing: -0.01em;
 }
 
-/* desc: --text-dim 6.1:1 AA ✓ */
 .va-feat-desc {
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--text-dim);
+  font-size: 13px;
+  color: rgba(13,13,13,0.52);
+  line-height: 1.6;
   margin: 0;
-  font-weight: 400;
 }
 
 /* ── Steps ───────────────────────────────────────────── */
 .va-steps {
-  display: flex;
-  flex-direction: column;
   list-style: none;
-  padding: 0;
-  margin: 0;
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .va-step {
   display: flex;
-  gap: 48px;
+  gap: 40px;
+  padding: 32px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
   align-items: flex-start;
-  padding: 44px 0;
-  border-top: 1px solid var(--border);
 }
 .va-steps > .va-step:last-child { border-bottom: none; }
 
-/* Step num is aria-hidden */
 .va-step-num {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--text-faint);
-  flex-shrink: 0;
-  width: 32px;
-  padding-top: 5px;
-}
-
-.va-step-body {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 180px 1fr auto;
-  align-items: center;
-  gap: 48px;
-}
-
-/* h3: #fff 21:1 AAA */
-.va-step-body h3 {
-  font-size: 28px;
+  font-size: 12px;
   font-weight: 600;
-  margin: 0;
-  letter-spacing: -0.02em;
-  color: #fff;
+  letter-spacing: 0.08em;
+  color: #c4b5fd;
+  padding-top: 3px;
+  min-width: 28px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* p: --text-dim 6.1:1 AA ✓ */
+.va-step-body h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d0d0d;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
 .va-step-body p {
   font-size: 14px;
-  line-height: 1.65;
-  color: var(--text-dim);
-  margin: 0;
+  color: rgba(13,13,13,0.52);
+  line-height: 1.6;
+  margin: 0 0 10px;
 }
-
-/* step-time aria-hidden from screen readers via visual-only presentation */
 .va-step-time {
   font-size: 12px;
-  color: var(--text-faint);
+  color: rgba(13,13,13,0.32);
   letter-spacing: 0.04em;
-  white-space: nowrap;
 }
 
 /* ── CTA ─────────────────────────────────────────────── */
 .va-cta {
-  padding: 160px 48px;
+  padding: 80px 48px 100px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 48px;
+  gap: 36px;
 }
 
-/* CTA heading: #fff 21:1 AAA */
 .va-cta-hed {
-  font-size: clamp(52px, 8vw, 100px);
+  font-size: clamp(48px, 7vw, 96px);
   font-weight: 700;
-  line-height: 1.0;
   letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: #0d0d0d;
   margin: 0;
-  color: #fff;
 }
 
-/* ── Footer ─────────────────────────────────────────── */
+/* ── Footer ──────────────────────────────────────────── */
 .va-footer {
-  padding: 32px 48px;
-  border-top: 1px solid var(--border);
+  position: relative; z-index: 1;
+  padding: 28px 48px;
+  border-top: 1px solid rgba(0,0,0,0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  /* footer text: --text-dim 6.1:1 AA ✓ */
-  color: var(--text-dim);
-  letter-spacing: 0.03em;
+  font-size: 13px;
+  color: rgba(13,13,13,0.38);
 }
 
-/* ── Scroll reveal ──────────────────────────────────── */
+/* ── Scroll reveal ───────────────────────────────────── */
 .va-reveal {
   opacity: 0;
-  transform: translateY(22px);
-  transition:
-    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
-.va-reveal.va-revealed { opacity: 1; transform: none; }
-
-/* ── Reduced motion — WCAG 2.3.3 / 2.1.1 ───────────── */
-@media (prefers-reduced-motion: reduce) {
-  .va-landing,
-  .va-hero-name,
-  .va-hero-sub,
-  .va-reveal {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .va-hero-bg-video { display: none !important; animation: none; }
+.va-reveal.va-revealed {
+  opacity: 1;
+  transform: none;
 }
 
-/* ══════════════════════════════════════════════════════
-   RESPONSIVE
-   ══════════════════════════════════════════════════════ */
-
-/* ── Tablet  640 – 1023px ───────────────────────────── */
-@media (max-width: 1023px) {
-  .va-nav  { padding: 22px 32px; }
-
-  .va-hero { padding: 100px 32px 70px; }
-  .va-hero-name { font-size: clamp(52px, 10vw, 110px); margin-bottom: 28px; }
-  .va-hero-sub  { gap: 24px; }
-  .va-hero-desc { font-size: 17px; }
-
-  .va-divider { margin: 0 32px; }
-  .va-section { padding: 90px 32px; }
-  .va-section-hed { font-size: clamp(36px, 6vw, 64px); margin-bottom: 60px; }
-
-  .va-feat-grid { grid-template-columns: repeat(2, 1fr); }
-  .va-feat:nth-child(3n) { border-right: 1px solid var(--border); }
-  .va-feat:nth-child(2n) { border-right: none; }
-  .va-feat:nth-last-child(-n+3) { border-bottom: 1px solid var(--border); }
-  .va-feat:nth-last-child(-n+2) { border-bottom: none; }
-
-  .va-step-body { grid-template-columns: 160px 1fr; gap: 32px; }
-  .va-step-time { display: none; }
-
-  .va-cta { padding: 100px 32px; }
-  .va-cta-hed { font-size: clamp(44px, 8vw, 80px); }
-
-  .va-footer { padding: 28px 32px; }
+/* ── Hero animation ──────────────────────────────────── */
+.va-hero-text {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+}
+.intro-ready .va-hero-text {
+  opacity: 1;
+  transform: none;
 }
 
-/* ── Mobile  < 640px ────────────────────────────────── */
-@media (max-width: 639px) {
-  .va-nav { padding: 18px 20px; }
-  .va-nav-logo { font-size: 12px; }
-  .va-nav-btn  { padding: 9px 18px; font-size: 13px; }
-
-  .va-hero { padding: 88px 20px 56px; }
-  .va-hero-name { font-size: clamp(44px, 13vw, 80px); margin-bottom: 24px; }
-  .va-hero-sub  { gap: 22px; }
-  .va-hero-desc { font-size: 16px; line-height: 1.6; max-width: 100%; }
-  .va-hero-desc br { display: none; }
-
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .va-nav { padding: 16px 20px; }
+  .va-hero { padding: 120px 20px 48px; }
+  .va-cards-section { padding: 0 20px 60px; }
+  .va-cards { grid-template-columns: repeat(2, 1fr); }
+  .va-card { min-height: 180px; }
   .va-divider { margin: 0 20px; }
-  .va-section { padding: 72px 20px; }
-  .va-section-label { margin-bottom: 28px; }
-  .va-section-hed { font-size: clamp(32px, 10vw, 52px); margin-bottom: 44px; }
-
-  /* Single column features */
-  .va-feat-grid { grid-template-columns: 1fr; }
-  .va-feat {
-    border-right: none !important;
-    border-bottom: 1px solid var(--border) !important;
-    padding: 28px 0 !important;
-  }
-  .va-feat:last-child { border-bottom: none !important; }
-
-  /* Stack step body */
-  .va-step { gap: 16px; padding: 32px 0; }
-  .va-step-body { grid-template-columns: 1fr; gap: 8px; }
-  .va-step-body h3 { font-size: 22px; }
-  .va-step-time { display: none; }
-
-  .va-cta { padding: 80px 20px; gap: 32px; }
-  .va-cta-hed { font-size: clamp(36px, 11vw, 60px); }
+  .va-section { padding: 60px 20px; }
+  .va-feat-grid { grid-template-columns: 1fr 1fr; }
+  .va-feat:nth-child(3n) { border-right: 1px solid rgba(0,0,0,0.08); padding-right: 28px; }
+  .va-feat:nth-child(2n) { border-right: none; padding-right: 0; }
+  .va-feat:nth-last-child(-n+2) { border-bottom: none; }
+  .va-feat:nth-last-child(-n+3) { border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .va-step { gap: 20px; }
+  .va-cta { padding: 60px 20px 80px; }
+  .va-footer { padding: 24px 20px; flex-direction: column; gap: 8px; text-align: center; }
   .va-btn-primary.large { padding: 18px 36px; font-size: 15px; }
-
-  .va-footer {
-    padding: 24px 20px;
-    flex-direction: column;
-    gap: 6px;
-    text-align: center;
-    font-size: 11px;
-  }
 }

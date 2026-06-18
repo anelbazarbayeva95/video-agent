@@ -1,4 +1,4 @@
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); color: var(--text-1); }
 
 /* ── Header ─────────────────────────────────────────── */
 .header {
