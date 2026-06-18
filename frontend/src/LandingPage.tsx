@@ -6,12 +6,12 @@ interface Props { onStart: () => void; }
 /* Portrait hero videos from Cloudinary */
 
 const FEATURES = [
-  { num: "01", title: "AI scene analysis",  desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing notes and cut recommendations." },
-  { num: "02", title: "Trim & export",       desc: "Select segments to remove. One click exports a clean MP4 — no timeline, no editor." },
-  { num: "03", title: "Best frame picker",   desc: "AI surfaces the sharpest, most expressive shots from your entire video. Download as JPEG." },
-  { num: "04", title: "Caption export",      desc: "Ready-to-use .srt subtitle file generated from AI captions. Drop it into any editor." },
-  { num: "05", title: "Analysis presets",    desc: "Switch between Edit, Remove silence, and Extract highlights with one click." },
-  { num: "06", title: "Saved configs",       desc: "Save your custom prompt. Rerun the exact same analysis on any video instantly." },
+  { num: "01", title: "AI scene analysis",  desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
+  { num: "02", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
+  { num: "03", title: "Best frame picker",   desc: "AI ranks every frame for sharpness and expression. Browse, select, and download as JPEG in seconds." },
+  { num: "04", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
+  { num: "05", title: "Analysis presets",    desc: "Switch between Edit, Remove silence, and Extract highlights — one click changes the entire analysis focus." },
+  { num: "06", title: "Saved configs",       desc: "Save your prompt and preset. Rerun the same analysis on any new video instantly." },
 ];
 
 export default function LandingPage({ onStart }: Props) {
@@ -50,7 +50,16 @@ export default function LandingPage({ onStart }: Props) {
 
       {/* ── Nav ── */}
       <nav className="va-nav" aria-label="Main navigation">
-        <span className="va-nav-logo" aria-label="Video Agent">Video Agent</span>
+        <span className="va-nav-logo" aria-label="Kadr">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#00c896" strokeWidth="1.5"/>
+            <rect x="5" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="14" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="5" y="14" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="14" y="14" width="5" height="5" fill="#00c896"/>
+          </svg>
+          Kadr
+        </span>
         <button className="va-nav-btn" onClick={onStart} aria-label="Get started — upload a video">
           Get started
         </button>
@@ -61,16 +70,16 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
 
-          <h1 id="va-hero-heading" className="va-hero-name" aria-label="Video Agent">
-            Video Agent
+          <h1 id="va-hero-heading" className="va-hero-name" aria-label="Kadr">
+            Kadr
           </h1>
           <div className="va-hero-sub">
             <p className="va-hero-desc">
-              Upload any video. AI analyzes every frame, marks what to cut, generates captions — and exports the result in one click.
+              Upload any video. AI finds what to cut, picks your best frames, writes captions — and exports everything in one click.
             </p>
             <div className="va-hero-actions">
               <button className="va-btn-primary" onClick={onStart}>
-                Upload a video
+                Try Kadr free
               </button>
               <span className="va-hero-note" aria-label="Free to use, no account needed">
                 Free · No account needed
@@ -84,7 +93,7 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Features ── */}
         <section className="va-section va-reveal" id="features" aria-labelledby="va-feat-heading">
           <div className="va-section-label" aria-hidden="true">What it does</div>
-          <h2 id="va-feat-heading" className="va-section-hed">Six tools.<br />One upload.</h2>
+          <h2 id="va-feat-heading" className="va-section-hed">Six tools.<br />One video.</h2>
           <div className="va-feat-grid" role="list">
             {FEATURES.map(f => (
               <div className="va-feat va-reveal" key={f.num} role="listitem">
@@ -102,7 +111,7 @@ export default function LandingPage({ onStart }: Props) {
         <section className="va-section va-reveal" id="how-it-works" aria-labelledby="va-how-heading">
           <div className="va-section-label" aria-hidden="true">How it works</div>
           <h2 id="va-how-heading" className="va-section-hed">Three steps.<br />Under a minute.</h2>
-          <ol className="va-steps" aria-label="Three steps to use Video Agent">
+          <ol className="va-steps" aria-label="Three steps to use Kadr">
             <li className="va-step va-reveal">
               <span className="va-step-num" aria-hidden="true">01</span>
               <div className="va-step-body">
@@ -134,9 +143,9 @@ export default function LandingPage({ onStart }: Props) {
 
         {/* ── CTA ── */}
         <section className="va-cta va-reveal" aria-labelledby="va-cta-heading">
-          <h2 id="va-cta-heading" className="va-cta-hed">Cut the noise.<br />Keep what matters.</h2>
+          <h2 id="va-cta-heading" className="va-cta-hed">Your footage,<br />distilled.</h2>
           <button className="va-btn-primary large" onClick={onStart}>
-            Upload a video →
+            Try Kadr free →
           </button>
         </section>
 
@@ -144,7 +153,7 @@ export default function LandingPage({ onStart }: Props) {
 
       {/* ── Footer ── */}
       <footer className="va-footer">
-        <span>Video Agent</span>
+        <span>Kadr</span>
         <span>Powered by Gemini 2.5 Flash · © 2025</span>
       </footer>
     </div>
