@@ -137,6 +137,7 @@
   width: 100%;
   max-width: 480px;
   aspect-ratio: 16/10;
+  perspective: 1200px;
 }
 
 .va-stack-img {
@@ -153,11 +154,12 @@
   transition: none;
 }
 .va-stack-active {
-  animation: stackFadeIn 0.7s cubic-bezier(0.4,0,0.2,1) both;
+  transform-origin: left center;
+  animation: pageFlipIn 0.7s cubic-bezier(0.4,0,0.2,1) both;
 }
-@keyframes stackFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@keyframes pageFlipIn {
+  from { transform: rotateY(-75deg); opacity: 0.2; }
+  to   { transform: rotateY(0deg);   opacity: 1;   }
 }
 @media (prefers-reduced-motion: reduce) {
   .va-stack-active { animation: none; }
