@@ -59,47 +59,43 @@ function CardVisual({ type }: { type: string }) {
 function ScreenshotStack() {
   const [videoIdx, setVideoIdx] = useState(0);
   const [shotIdx, setShotIdx] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    timerRef.current = setTimeout(advance, 1200);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [videoIdx, shotIdx]);
-
-  function advance() {
-    const nextShot = shotIdx + 1;
-    if (nextShot < SHOTS_PER_VIDEO) {
-      setShotIdx(nextShot);
-    } else {
-      setVideoIdx((videoIdx + 1) % VIDEOS.length);
-      setShotIdx(0);
-    }
-  }
+    const t = setTimeout(() => {
+      const next = shotIdx + 1;
+      if (next < SHOTS_PER_VIDEO) setShotIdx(next);
+      else { setVideoIdx(v => (v + 1) % VIDEOS.length); setShotIdx(0); }
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [shotIdx, videoIdx]);
 
   const video = VIDEOS[videoIdx];
-  // build deck: active + up to 3 behind
-  const deck = Array.from({ length: Math.min(4, SHOTS_PER_VIDEO) }, (_, i) => {
-    const s = shotIdx - i;
-    if (s < 0) return null;
-    const idx = s + 1;
-    return { src: `/screenshots/${video}-0${idx}.jpg`, offset: i };
-  }).filter(Boolean) as { src: string; offset: number }[];
+
+  // static deck slots behind active for depth (fixed, never move)
+  const prevA = shotIdx > 0 ? shotIdx - 1 : -1;
+  const prevB = shotIdx > 1 ? shotIdx - 2 : -1;
 
   return (
     <div className="va-stack" aria-label="Product screenshots">
-      {deck.map(({ src, offset }) => (
-        <img
-          key={src}
-          src={src}
-          alt="Kadr app screenshot"
-          className="va-stack-img"
-          style={{
-            zIndex: 10 - offset,
-            transform: `translate(${offset * 14}px, ${offset * 10}px) scale(${1 - offset * 0.04}) rotate(${offset % 2 === 0 ? offset * -1.2 : offset * 1.2}deg)`,
-            opacity: offset === 0 ? 1 : 1 - offset * 0.18,
-          }}
-        />
-      ))}
+      {/* static depth cards — don't animate */}
+      {prevB >= 0 && (
+        <img src={`/screenshots/${video}-0${prevB + 1}.jpg`} alt="" aria-hidden="true"
+          className="va-stack-img va-stack-depth"
+          style={{ zIndex: 1, transform: "translate(20px, 14px) scale(0.93) rotate(-1.8deg)", opacity: 0.45 }} />
+      )}
+      {prevA >= 0 && (
+        <img src={`/screenshots/${video}-0${prevA + 1}.jpg`} alt="" aria-hidden="true"
+          className="va-stack-img va-stack-depth"
+          style={{ zIndex: 2, transform: "translate(10px, 7px) scale(0.97) rotate(-0.9deg)", opacity: 0.65 }} />
+      )}
+      {/* active image — crossfades */}
+      <img
+        key={`${video}-${shotIdx}`}
+        src={`/screenshots/${video}-0${shotIdx + 1}.jpg`}
+        alt="Kadr app screenshot"
+        className="va-stack-img va-stack-active"
+        style={{ zIndex: 10 }}
+      />
     </div>
   );
 }
@@ -154,7 +150,7 @@ export default function LandingPage({ onStart }: Props) {
           <div className="va-hero-text">
             <p className="va-hero-eyebrow">AI video toolkit</p>
             <h1 id="va-hero-heading" className="va-hero-name">
-              Your footage,<br />distilled.
+              Upload once.<br />Export everything.
             </h1>
             <p className="va-hero-desc">
               Upload any video. AI finds what to cut, picks your best frames, writes captions — and exports everything in one click.
@@ -246,7 +242,7 @@ export default function LandingPage({ onStart }: Props) {
 
         <section className="va-cta va-reveal" aria-labelledby="va-cta-heading">
           <h2 id="va-cta-heading" className="va-cta-hed">Ready to edit<br />smarter?</h2>
-          <button className="va-btn-primary large" onClick={onStart}>Try Kadr free →</button>
+          <button className="va-btn-primary" onClick={onStart}>Try Kadr free →</button>
         </section>
 
       </main>
