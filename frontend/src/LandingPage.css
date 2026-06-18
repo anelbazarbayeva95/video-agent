@@ -16,7 +16,7 @@
   --focus-ring:  #fff;
 
   font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
-  background: var(--bg);
+  background: #060e14;
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
@@ -93,14 +93,71 @@ button:focus-visible { border-radius: 100px; }
   justify-content: center;
   padding: 140px 48px 80px;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(0,120,140,0.28) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 70% at 10% 80%, rgba(0,60,90,0.35) 0%, transparent 60%),
-    linear-gradient(160deg, #060e14 0%, #0a1520 40%, #06090d 100%);
+  background: transparent;
+}
+
+/* Floating orbs — fixed to viewport, visible across all sections */
+.va-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Ensure all page content sits above orbs */
+#va-main, .va-footer { position: relative; z-index: 1; }
+
+.va-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+}
+
+.va-orb-1 {
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, rgba(0,180,160,0.22), transparent 70%);
+  top: -140px; right: 5%;
+  animation: orbDrift1 12s ease-in-out infinite;
+}
+.va-orb-2 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(0,100,140,0.28), transparent 70%);
+  bottom: -80px; left: -60px;
+  animation: orbDrift2 15s ease-in-out infinite;
+}
+.va-orb-3 {
+  width: 260px; height: 260px;
+  background: radial-gradient(circle, rgba(0,200,180,0.16), transparent 70%);
+  top: 30%; right: 30%;
+  animation: orbDrift3 18s ease-in-out infinite;
+}
+.va-orb-4 {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(0,140,120,0.2), transparent 70%);
+  top: 15%; left: 30%;
+  animation: orbDrift1 22s ease-in-out infinite reverse;
+}
+
+@keyframes orbDrift1 {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(40px, -30px); }
+  66%       { transform: translate(-20px, 20px); }
+}
+@keyframes orbDrift2 {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(-35px, 25px); }
+  66%       { transform: translate(25px, -15px); }
+}
+@keyframes orbDrift3 {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(30px, 40px); }
 }
 
 /* Heading — in-flow, top of hero content */
 .va-hero-name {
+  position: relative;
+  z-index: 1;
   font-size: clamp(64px, 12vw, 160px);
   font-weight: 700;
   line-height: 0.92;
@@ -122,6 +179,8 @@ button:focus-visible { border-radius: 100px; }
 }
 
 .va-hero-sub {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

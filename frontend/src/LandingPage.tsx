@@ -37,6 +37,14 @@ export default function LandingPage({ onStart }: Props) {
   return (
     <div className={`va-landing ${introFaded ? "intro-ready" : ""}`}>
 
+      {/* Global floating orbs — decorative, fixed to viewport */}
+      <div className="va-orbs" aria-hidden="true">
+        <div className="va-orb va-orb-1" />
+        <div className="va-orb va-orb-2" />
+        <div className="va-orb va-orb-3" />
+        <div className="va-orb va-orb-4" />
+      </div>
+
       {/* Skip nav — WCAG 2.1 SC 2.4.1 */}
       <a href="#va-main" className="va-skip">Skip to main content</a>
 
