@@ -52,11 +52,11 @@ export default function LandingPage({ onStart }: Props) {
       <nav className="va-nav" aria-label="Main navigation">
         <span className="va-nav-logo" aria-label="Kadr">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#00c896" strokeWidth="1.5"/>
-            <rect x="5" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="14" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="5" y="14" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="14" y="14" width="5" height="5" fill="#00c896"/>
+            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#c4b5fd" strokeWidth="1.5"/>
+            <rect x="5" y="5" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="14" y="5" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="5" y="14" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="14" y="14" width="5" height="5" fill="#c4b5fd"/>
           </svg>
           Kadr
         </span>

@@ -76,7 +76,7 @@ button:focus-visible { border-radius: 100px; }
 }
 
 .va-nav-btn {
-  background: #00c896;
+  background: #c4b5fd;
   color: #000;
   border: none;
   border-radius: 100px;
@@ -122,25 +122,25 @@ button:focus-visible { border-radius: 100px; }
 
 .va-orb-1 {
   width: 520px; height: 520px;
-  background: radial-gradient(circle, rgba(0,180,160,0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(196,181,253,0.18), transparent 70%);
   top: -140px; right: 5%;
   animation: orbDrift1 12s ease-in-out infinite;
 }
 .va-orb-2 {
   width: 380px; height: 380px;
-  background: radial-gradient(circle, rgba(0,100,140,0.28), transparent 70%);
+  background: radial-gradient(circle, rgba(139,92,246,0.22), transparent 70%);
   bottom: -80px; left: -60px;
   animation: orbDrift2 15s ease-in-out infinite;
 }
 .va-orb-3 {
   width: 260px; height: 260px;
-  background: radial-gradient(circle, rgba(0,200,180,0.16), transparent 70%);
+  background: radial-gradient(circle, rgba(196,181,253,0.12), transparent 70%);
   top: 30%; right: 30%;
   animation: orbDrift3 18s ease-in-out infinite;
 }
 .va-orb-4 {
   width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(0,140,120,0.2), transparent 70%);
+  background: radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%);
   top: 15%; left: 30%;
   animation: orbDrift1 22s ease-in-out infinite reverse;
 }
@@ -220,7 +220,7 @@ button:focus-visible { border-radius: 100px; }
 
 /* Primary button: black text on white — 21:1 AAA */
 .va-btn-primary {
-  background: #00c896;
+  background: #c4b5fd;
   color: #000;
   border: none;
   border-radius: 100px;

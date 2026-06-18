@@ -96,11 +96,11 @@ export default function App({ onBack }: { onBack?: () => void }) {
       <header className="header" role="banner">
         <button className="header-brand" onClick={onBack} aria-label="Go back to home">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#00c896" strokeWidth="1.5"/>
-            <rect x="5" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="14" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="5" y="14" width="5" height="5" fill="#00c896" opacity=".3"/>
-            <rect x="14" y="14" width="5" height="5" fill="#00c896"/>
+            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#c4b5fd" strokeWidth="1.5"/>
+            <rect x="5" y="5" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="14" y="5" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="5" y="14" width="5" height="5" fill="#c4b5fd" opacity=".3"/>
+            <rect x="14" y="14" width="5" height="5" fill="#c4b5fd"/>
           </svg>
           <span>Kadr</span>
         </button>

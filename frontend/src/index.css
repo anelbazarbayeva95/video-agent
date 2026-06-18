@@ -2,8 +2,8 @@
 
 :root {
   --bg:       #060e14;
-  --brand:    #00c896;
-  --brand-dim: rgba(0,200,150,0.15);
+  --brand:    #c4b5fd;
+  --brand-dim: rgba(196,181,253,0.15);
   --surface:  rgba(255,255,255,0.04);
   --surface2: rgba(255,255,255,0.07);
   --border:   rgba(255,255,255,0.08);

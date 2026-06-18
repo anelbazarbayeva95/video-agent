@@ -72,7 +72,7 @@ button.header-brand:hover { opacity: 0.8; }
 /* ── Dropzone ────────────────────────────────────────── */
 .dropzone {
   flex: 1;
-  border: 1px dashed rgba(0,200,150,0.25);
+  border: 1px dashed rgba(196,181,253,0.25);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -84,7 +84,7 @@ button.header-brand:hover { opacity: 0.8; }
   min-height: 360px;
   padding: 48px 24px;
   text-align: center;
-  background: rgba(0,200,150,0.03);
+  background: rgba(196,181,253,0.03);
   font-family: inherit;
   color: inherit;
   position: relative;
@@ -94,7 +94,7 @@ button.header-brand:hover { opacity: 0.8; }
   content: '';
   position: absolute;
   width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(0,200,150,0.07), transparent 70%);
+  background: radial-gradient(circle, rgba(196,181,253,0.07), transparent 70%);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -102,7 +102,7 @@ button.header-brand:hover { opacity: 0.8; }
 .dropzone:hover,
 .dropzone:focus-visible {
   border-color: var(--brand);
-  background: rgba(0,200,150,0.06);
+  background: rgba(196,181,253,0.06);
 }
 .dropzone svg { color: var(--brand); opacity: 0.7; }
 .dropzone p   { font-size: 15px; color: var(--text-1); font-weight: 500; }
@@ -195,7 +195,7 @@ button.header-brand:hover { opacity: 0.8; }
 }
 .prompt-input:focus {
   outline: none;
-  border-color: rgba(0,200,150,0.4);
+  border-color: rgba(196,181,253,0.4);
   background: var(--surface2);
 }
 .prompt-input::placeholder { color: var(--text-4); }
