@@ -95,10 +95,16 @@ export default function App({ onBack }: { onBack?: () => void }) {
 
       <header className="header" role="banner">
         <button className="header-brand" onClick={onBack} aria-label="Go back to home">
-          <Zap size={20} aria-hidden="true" />
-          <span>Video Agent</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#00c896" strokeWidth="1.5"/>
+            <rect x="5" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="14" y="5" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="5" y="14" width="5" height="5" fill="#00c896" opacity=".3"/>
+            <rect x="14" y="14" width="5" height="5" fill="#00c896"/>
+          </svg>
+          <span>Kadr</span>
         </button>
-        <p className="header-sub" aria-hidden="true">Multimodal video analysis powered by Gemini 2.5 Flash</p>
+        <p className="header-sub" aria-hidden="true">AI video analysis · frame picker · captions</p>
         {videoUrl && (
           <button className="reset-btn" onClick={reset} aria-label="Start over with a new video">
             <RotateCcw size={13} aria-hidden="true" /> New video

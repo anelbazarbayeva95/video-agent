@@ -1,11 +1,13 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       #000;
-  --surface:  rgba(255,255,255,0.03);
-  --surface2: rgba(255,255,255,0.06);
-  --border:   rgba(255,255,255,0.09);
-  --border2:  rgba(255,255,255,0.2);
+  --bg:       #060e14;
+  --brand:    #00c896;
+  --brand-dim: rgba(0,200,150,0.15);
+  --surface:  rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.18);
   --text-1:   #fff;
   --text-2:   rgba(255,255,255,0.62);
   --text-3:   rgba(255,255,255,0.38);
