@@ -76,8 +76,8 @@ button:focus-visible { border-radius: 100px; }
 }
 
 .va-nav-btn {
-  background: #fff;
-  color: #000;              /* 21:1 on white — AAA */
+  background: #00c896;
+  color: #000;
   border: none;
   border-radius: 100px;
   padding: 10px 22px;
@@ -220,7 +220,7 @@ button:focus-visible { border-radius: 100px; }
 
 /* Primary button: black text on white — 21:1 AAA */
 .va-btn-primary {
-  background: #fff;
+  background: #00c896;
   color: #000;
   border: none;
   border-radius: 100px;
