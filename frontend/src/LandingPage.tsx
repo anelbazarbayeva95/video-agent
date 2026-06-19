@@ -164,23 +164,6 @@ export default function LandingPage({ onStart }: Props) {
           </div>
         </section>
 
-        {/* ── Feature cards ── */}
-        <section className="va-cards-section" aria-label="Features">
-          <div className="va-cards">
-            {CARDS.map((card, i) => (
-              <div className="va-card va-reveal" key={card.phrase} style={{ transitionDelay: `${i * 0.08}s` }}>
-                <div className="va-card-visual" aria-hidden="true">
-                  <CardVisual type={card.visual} />
-                </div>
-                <div className="va-card-body">
-                  <h3 className="va-card-phrase">{card.phrase}</h3>
-                  <p className="va-card-sub">{card.sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <div className="va-divider" role="separator" />
 
         <section className="va-section va-reveal" id="features" aria-labelledby="va-feat-heading">
@@ -199,6 +182,21 @@ export default function LandingPage({ onStart }: Props) {
                 <span className="va-feat-num" aria-hidden="true">{f.num}</span>
                 <h3 className="va-feat-title">{f.title}</h3>
                 <p className="va-feat-desc">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── 4 animated cards ── */}
+          <div className="va-cards" style={{ marginTop: 48 }}>
+            {CARDS.map((card, i) => (
+              <div className="va-card va-reveal" key={card.phrase} style={{ transitionDelay: `${i * 0.08}s` }}>
+                <div className="va-card-visual" aria-hidden="true">
+                  <CardVisual type={card.visual} />
+                </div>
+                <div className="va-card-body">
+                  <h3 className="va-card-phrase">{card.phrase}</h3>
+                  <p className="va-card-sub">{card.sub}</p>
+                </div>
               </div>
             ))}
           </div>
