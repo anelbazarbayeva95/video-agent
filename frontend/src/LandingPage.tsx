@@ -59,41 +59,40 @@ function CardVisual({ type }: { type: string }) {
 function ScreenshotStack() {
   const [videoIdx, setVideoIdx] = useState(0);
   const [shotIdx, setShotIdx] = useState(0);
+  const [exitSrc, setExitSrc] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
+      const currentSrc = `/screenshots/${VIDEOS[videoIdx]}-0${shotIdx + 1}.jpg`;
+      setExitSrc(currentSrc);
       const next = shotIdx + 1;
       if (next < SHOTS_PER_VIDEO) setShotIdx(next);
       else { setVideoIdx(v => (v + 1) % VIDEOS.length); setShotIdx(0); }
-    }, 1800);
+    }, 2200);
     return () => clearTimeout(t);
   }, [shotIdx, videoIdx]);
 
-  const video = VIDEOS[videoIdx];
+  // clear exit image after animation
+  useEffect(() => {
+    if (!exitSrc) return;
+    const t = setTimeout(() => setExitSrc(null), 550);
+    return () => clearTimeout(t);
+  }, [exitSrc]);
 
-  // static deck slots behind active for depth (fixed, never move)
-  const prevA = shotIdx > 0 ? shotIdx - 1 : -1;
-  const prevB = shotIdx > 1 ? shotIdx - 2 : -1;
+  const video = VIDEOS[videoIdx];
+  const activeSrc = `/screenshots/${video}-0${shotIdx + 1}.jpg`;
 
   return (
     <div className="va-stack" aria-label="Product screenshots">
-      {/* static depth cards — don't animate */}
-      {prevB >= 0 && (
-        <img src={`/screenshots/${video}-0${prevB + 1}.jpg`} alt="" aria-hidden="true"
-          className="va-stack-img va-stack-depth"
-          style={{ zIndex: 1, transform: "translate(20px, 14px) scale(0.93) rotate(-1.8deg)", opacity: 0.45 }} />
+      {exitSrc && exitSrc !== activeSrc && (
+        <img key={`exit-${exitSrc}`} src={exitSrc} alt="" aria-hidden="true"
+          className="va-stack-img va-swipe-out" style={{ zIndex: 5 }} />
       )}
-      {prevA >= 0 && (
-        <img src={`/screenshots/${video}-0${prevA + 1}.jpg`} alt="" aria-hidden="true"
-          className="va-stack-img va-stack-depth"
-          style={{ zIndex: 2, transform: "translate(10px, 7px) scale(0.97) rotate(-0.9deg)", opacity: 0.65 }} />
-      )}
-      {/* active image — crossfades */}
       <img
-        key={`${video}-${shotIdx}`}
-        src={`/screenshots/${video}-0${shotIdx + 1}.jpg`}
+        key={activeSrc}
+        src={activeSrc}
         alt="Kadr app screenshot"
-        className="va-stack-img va-stack-active"
+        className="va-stack-img va-swipe-in"
         style={{ zIndex: 10 }}
       />
     </div>

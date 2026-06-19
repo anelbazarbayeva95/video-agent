@@ -137,32 +137,36 @@
   width: 100%;
   max-width: 480px;
   aspect-ratio: 16/10;
-  perspective: 1200px;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
+.va-stack {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.14);
+}
 .va-stack-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.14);
-  transform-origin: bottom left;
 }
-.va-stack-depth {
-  transition: none;
+.va-swipe-in {
+  animation: swipeIn 0.5s cubic-bezier(0.4,0,0.2,1) both;
 }
-.va-stack-active {
-  transform-origin: left center;
-  animation: pageFlipIn 0.7s cubic-bezier(0.4,0,0.2,1) both;
+.va-swipe-out {
+  animation: swipeOut 0.5s cubic-bezier(0.4,0,0.2,1) both;
 }
-@keyframes pageFlipIn {
-  from { transform: rotateY(-75deg); opacity: 0.2; }
-  to   { transform: rotateY(0deg);   opacity: 1;   }
+@keyframes swipeIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes swipeOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-40%); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .va-stack-active { animation: none; }
+  .va-swipe-in, .va-swipe-out { animation: none; }
 }
 
 /* ── CTA buttons ─────────────────────────────────────── */
