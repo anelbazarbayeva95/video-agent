@@ -14,7 +14,7 @@ const PROMPTS = {
   highlights: "Identify the most engaging and high-energy moments in this video. Mark low-energy, repetitive, or off-topic segments as cut_recommended so the highlights can be extracted.",
 };
 
-type RightTab = "edit" | "frames";
+type RightTab = "frames" | "edit";
 
 export default function App({ onBack }: { onBack?: () => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -26,7 +26,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [rightTab, setRightTab] = useState<RightTab>("edit");
+  const [rightTab, setRightTab] = useState<RightTab>("frames");
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,7 +42,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
     setAnalysis(null);
     setError(null);
     setStatus(null);
-    setRightTab("edit");
+    setRightTab("frames");
   }
 
   function reset() {
@@ -52,7 +52,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
     setError(null);
     setStatus(null);
     setCurrentTime(0);
-    setRightTab("edit");
+    setRightTab("frames");
   }
 
   function selectPreset(key: keyof typeof PROMPTS) {
@@ -104,7 +104,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
           </svg>
           <span>Kadr</span>
         </button>
-        <p className="header-sub" aria-hidden="true">AI video analysis · frame picker · captions</p>
+        <p className="header-sub" aria-hidden="true">AI frame picker · image export · video tools</p>
         {videoUrl && (
           <button className="reset-btn" onClick={reset} aria-label="Start over with a new video">
             <RotateCcw size={13} aria-hidden="true" /> New video
@@ -201,7 +201,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
                   aria-label={loading ? "Analyzing video, please wait" : "Run AI analysis"}
                 >
                   <Play size={16} aria-hidden="true" />
-                  {loading ? "Analyzing..." : "Run Agent"}
+                  {loading ? "Analyzing..." : "Analyze"}
                 </button>
               </div>
 
@@ -213,17 +213,9 @@ export default function App({ onBack }: { onBack?: () => void }) {
         </div>
 
         {showSidebar && file && (
-          <aside className="sidebar" aria-label="Video tools">
+          <aside className="sidebar" aria-label="Image and edit tools">
             {/* Tab bar */}
             <div className="sidebar-tabs" role="tablist">
-              <button
-                role="tab"
-                aria-selected={rightTab === "edit"}
-                className={`sidebar-tab ${rightTab === "edit" ? "active" : ""}`}
-                onClick={() => setRightTab("edit")}
-              >
-                <Scissors size={13} /> Edit
-              </button>
               <button
                 role="tab"
                 aria-selected={rightTab === "frames"}
@@ -232,7 +224,19 @@ export default function App({ onBack }: { onBack?: () => void }) {
               >
                 <Image size={13} /> Best Frames
               </button>
+              <button
+                role="tab"
+                aria-selected={rightTab === "edit"}
+                className={`sidebar-tab ${rightTab === "edit" ? "active" : ""}`}
+                onClick={() => setRightTab("edit")}
+              >
+                <Scissors size={13} /> Edit
+              </button>
             </div>
+
+            {rightTab === "frames" && (
+              <FramePicker file={file} onSeek={seekTo} />
+            )}
 
             {rightTab === "edit" && analysis && (
               <ResultsSidebar analysis={analysis} file={file} onSeek={seekTo} />
@@ -241,12 +245,8 @@ export default function App({ onBack }: { onBack?: () => void }) {
             {rightTab === "edit" && !analysis && (
               <div className="sidebar-empty">
                 <Scissors size={28} />
-                <p>Run the agent to see edit suggestions and export options.</p>
+                <p>Run an analysis to see edit suggestions and export options.</p>
               </div>
-            )}
-
-            {rightTab === "frames" && (
-              <FramePicker file={file} onSeek={seekTo} />
             )}
           </aside>
         )}
