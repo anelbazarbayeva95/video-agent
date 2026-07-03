@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, Response
 from pydantic import BaseModel
 import os
 import json
@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from analyze import analyze_video
 from trim import trim_video
 from frames import extract_best_frames
+from sticker import generate_sticker, STYLES
 
 load_dotenv()
 
@@ -82,3 +83,27 @@ async def best_frames(file: UploadFile = File(...), prompt: str = Form(None)):
         return {"frames": frames}
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+@app.post("/sticker")
+async def sticker(
+    file: UploadFile = File(...),
+    style: str = Form("original"),
+    format: str = Form("png"),
+):
+    if style not in STYLES:
+        raise HTTPException(400, f"Unknown style. Options: {', '.join(STYLES)}")
+    if format not in ("png", "webp"):
+        raise HTTPException(400, "Format must be png or webp")
+
+    contents = await file.read()
+    try:
+        image = generate_sticker(contents, style, format)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+    return Response(
+        content=image,
+        media_type=f"image/{format}",
+        headers={"Content-Disposition": f'attachment; filename="sticker.{format}"'},
+    )

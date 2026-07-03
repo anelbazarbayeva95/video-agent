@@ -164,6 +164,24 @@
 
 .fp-reason { font-size: 11px; color: var(--text-3); line-height: 1.4; margin: 0; }
 
+.fp-score {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 7px; border-radius: 100px;
+  pointer-events: none;
+}
+
+.fp-scene {
+  font-size: 10px; color: var(--text-4);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.fp-lb-score { font-weight: 400; color: var(--text-3); }
+
 /* Lightbox */
 .fp-lightbox {
   position: fixed; inset: 0;
@@ -225,6 +243,20 @@
 }
 .fp-lb-ts { font-size: 13px; font-weight: 600; color: var(--text-1); font-variant-numeric: tabular-nums; }
 .fp-lb-reason { font-size: 12px; color: var(--text-3); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.fp-lb-sticker {
+  display: flex; align-items: center; gap: 6px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  color: var(--text-2);
+  font-size: 12px; font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer; font-family: inherit;
+  white-space: nowrap; min-height: 36px; flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fp-lb-sticker:hover { color: var(--text-1); border-color: var(--brand); }
 
 .fp-lb-dl {
   display: flex; align-items: center; gap: 6px;

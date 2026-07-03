@@ -7,10 +7,10 @@ const VIDEOS = ["v01", "v02", "v03", "v04"];
 const SHOTS_PER_VIDEO = 6;
 
 const CARDS = [
+  { phrase: "Pick best frames",    sub: "Every frame ranked by sharpness and expression",   visual: "grid"     },
+  { phrase: "Export as images",    sub: "Download your favorites as JPEGs in one click",    visual: "arrow"    },
   { phrase: "Find the cuts",       sub: "AI marks every silence, filler, and slow section", visual: "waveform" },
-  { phrase: "Pick best frames",    sub: "Ranked by sharpness and expression",                visual: "grid"     },
-  { phrase: "Write captions",      sub: "SRT file ready to drop in any editor",              visual: "lines"    },
-  { phrase: "Export in one click", sub: "Clean MP4, JPEGs, or subtitles — all at once",     visual: "arrow"    },
+  { phrase: "Write captions",      sub: "SRT file ready to drop in any editor",             visual: "lines"    },
 ];
 
 const WAVE_HEIGHTS = [8,16,32,12,48,28,56,20,40,14,52,24,36,18,44,10,38,26,50,22,42,16,34,30,46,12];
@@ -147,12 +147,12 @@ export default function LandingPage({ onStart }: Props) {
         {/* ── Hero: split layout ── */}
         <section className="va-hero" aria-labelledby="va-hero-heading">
           <div className="va-hero-text">
-            <p className="va-hero-eyebrow">AI video toolkit</p>
+            <p className="va-hero-eyebrow">AI image toolkit</p>
             <h1 id="va-hero-heading" className="va-hero-name">
-              Upload once.<br />Export everything.
+              Turn videos<br />into images.
             </h1>
             <p className="va-hero-desc">
-              Upload any video. AI finds what to cut, picks your best frames, writes captions — and exports everything in one click.
+              Upload any video. AI finds the sharpest, most expressive frames and hands them to you as ready-to-use images — with cut suggestions and captions when you need them.
             </p>
             <div className="va-hero-actions">
               <button className="va-btn-primary" onClick={onStart}>Try Kadr free</button>
@@ -168,15 +168,15 @@ export default function LandingPage({ onStart }: Props) {
 
         <section className="va-section va-reveal" id="features" aria-labelledby="va-feat-heading">
           <div className="va-section-label" aria-hidden="true">What it does</div>
-          <h2 id="va-feat-heading" className="va-section-hed">Six tools.<br />One video.</h2>
+          <h2 id="va-feat-heading" className="va-section-hed">Six tools.<br />One upload.</h2>
           <div className="va-feat-grid" role="list">
             {[
-              { num: "01", title: "AI scene analysis",  desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
-              { num: "02", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
-              { num: "03", title: "Best frame picker",   desc: "AI ranks every frame for sharpness and expression. Browse, select, and download as JPEG in seconds." },
-              { num: "04", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
-              { num: "05", title: "Analysis presets",    desc: "Switch between Edit, Remove silence, and Extract highlights — one click changes the entire analysis focus." },
-              { num: "06", title: "Saved configs",       desc: "Save your prompt and preset. Rerun the same analysis on any new video instantly." },
+              { num: "01", title: "Best frame picker",   desc: "AI ranks every frame for sharpness and expression. Browse, select, and download as JPEG in seconds." },
+              { num: "02", title: "Sticker generator",   desc: "Turn any frame into a die-cut sticker — cartoon, 3D, pixel art, or oil paint — exported as transparent PNG or WebP." },
+              { num: "03", title: "Image export",        desc: "Preview any frame full-size, pick your favorites, and download them all — ready for thumbnails, posts, and profiles." },
+              { num: "04", title: "AI scene analysis",   desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
+              { num: "05", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
+              { num: "06", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
             ].map(f => (
               <div className="va-feat va-reveal" key={f.num} role="listitem">
                 <span className="va-feat-num" aria-hidden="true">{f.num}</span>
@@ -220,7 +220,7 @@ export default function LandingPage({ onStart }: Props) {
               <span className="va-step-num" aria-hidden="true">02</span>
               <div className="va-step-body">
                 <h3>Analyze</h3>
-                <p>Gemini 2.5 Flash extracts frames with timestamps, identifies segments, pacing, silence, and highlights.</p>
+                <p>Gemini 2.5 Flash scores every frame for sharpness, expression, and composition — and maps segments, pacing, and highlights.</p>
                 <span className="va-step-time">~30 sec</span>
               </div>
             </li>
@@ -228,7 +228,7 @@ export default function LandingPage({ onStart }: Props) {
               <span className="va-step-num" aria-hidden="true">03</span>
               <div className="va-step-body">
                 <h3>Export</h3>
-                <p>Trimmed MP4, .srt captions, or best frames as JPEGs — all from one panel.</p>
+                <p>Best frames as JPEGs — plus a trimmed MP4 or .srt captions if you want them.</p>
                 <span className="va-step-time">~5 sec</span>
               </div>
             </li>
@@ -238,7 +238,7 @@ export default function LandingPage({ onStart }: Props) {
         <div className="va-divider" role="separator" />
 
         <section className="va-cta va-reveal" aria-labelledby="va-cta-heading">
-          <h2 id="va-cta-heading" className="va-cta-hed">Ready to edit<br />smarter?</h2>
+          <h2 id="va-cta-heading" className="va-cta-hed">Your best frames<br />are in there.</h2>
           <button className="va-btn-primary" onClick={onStart}>Try Kadr free →</button>
         </section>
 

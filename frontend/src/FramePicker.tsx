@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Image, Download, Loader, CheckCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Image, Download, Loader, CheckCircle, X, ChevronLeft, ChevronRight, Sticker } from "lucide-react";
 import type { BestFrame } from "./api";
 import { getBestFrames } from "./api";
+import StickerModal from "./StickerModal";
 import "./FramePicker.css";
 
 interface Props {
@@ -24,6 +25,7 @@ export default function FramePicker({ file, onSeek }: Props) {
   const [done, setDone] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<number | null>(null);
+  const [stickerOpen, setStickerOpen] = useState(false);
 
   async function handleExtract() {
     setLoading(true);
@@ -143,6 +145,11 @@ export default function FramePicker({ file, onSeek }: Props) {
                       <CheckCircle size={20} />
                     </div>
                   )}
+                  {frame.score != null && (
+                    <span className="fp-score" aria-label={`Quality score ${frame.score} out of 100`}>
+                      {frame.score}
+                    </span>
+                  )}
                   <div className="fp-img-overlay" aria-hidden="true">
                     <span className="fp-preview-hint">Click to preview</span>
                   </div>
@@ -173,6 +180,7 @@ export default function FramePicker({ file, onSeek }: Props) {
                       </button>
                     </div>
                   </div>
+                  {frame.scene?.label && <p className="fp-scene">{frame.scene.label}</p>}
                   <p className="fp-reason">{frame.reason}</p>
                 </div>
               </div>
@@ -204,11 +212,18 @@ export default function FramePicker({ file, onSeek }: Props) {
                 <ChevronLeft size={18} />
               </button>
               <div className="fp-lb-info">
-                <span className="fp-lb-ts">{formatTime(previewFrame.timestamp)}</span>
+                <span className="fp-lb-ts">
+                  {formatTime(previewFrame.timestamp)}
+                  {previewFrame.score != null && <span className="fp-lb-score"> · {previewFrame.score}/100</span>}
+                  {previewFrame.scene?.label && <span className="fp-lb-score"> · {previewFrame.scene.label}</span>}
+                </span>
                 <span className="fp-lb-reason">{previewFrame.reason}</span>
               </div>
               <button className="fp-lb-nav" onClick={nextPreview} disabled={preview === frames.length - 1} aria-label="Next frame">
                 <ChevronRight size={18} />
+              </button>
+              <button className="fp-lb-sticker" onClick={() => setStickerOpen(true)}>
+                <Sticker size={14} /> Sticker
               </button>
               <button className="fp-lb-dl" onClick={() => downloadFrame(previewFrame, preview)}>
                 <Download size={14} /> Download
@@ -216,6 +231,13 @@ export default function FramePicker({ file, onSeek }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {stickerOpen && previewFrame && (
+        <StickerModal
+          imageB64={previewFrame.image_b64}
+          onClose={() => setStickerOpen(false)}
+        />
       )}
     </div>
   );
