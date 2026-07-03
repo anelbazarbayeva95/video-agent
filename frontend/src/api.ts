@@ -83,10 +83,26 @@ export async function trimVideo(
   return res.blob();
 }
 
+export interface FrameScores {
+  sharpness: number | null;
+  face: number | null;
+  composition: number | null;
+}
+
+export interface FrameScene {
+  index: number;
+  label: string;
+  start: number | null;
+  end: number | null;
+}
+
 export interface BestFrame {
   timestamp: number;
   reason: string;
   image_b64: string;
+  score?: number | null;
+  scores?: FrameScores;
+  scene?: FrameScene;
 }
 
 export async function getBestFrames(file: File, prompt?: string): Promise<BestFrame[]> {

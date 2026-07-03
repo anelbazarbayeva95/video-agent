@@ -50,7 +50,7 @@ Open `http://localhost:5173`
 
 ## API
 
-`POST /best-frames` — accepts a video file + optional prompt, returns the top-ranked frames as base64 JPEGs with timestamps and reasons.
+`POST /best-frames` — accepts a video file + optional prompt. AI groups the video into scenes, picks the top candidate frames per scene, and returns them ranked as base64 JPEGs with metadata: timestamp, overall score, sub-scores (sharpness, face, composition), and scene info.
 
 `POST /analyze` — accepts a video file + optional prompt, streams back SSE events:
 

@@ -143,6 +143,11 @@ export default function FramePicker({ file, onSeek }: Props) {
                       <CheckCircle size={20} />
                     </div>
                   )}
+                  {frame.score != null && (
+                    <span className="fp-score" aria-label={`Quality score ${frame.score} out of 100`}>
+                      {frame.score}
+                    </span>
+                  )}
                   <div className="fp-img-overlay" aria-hidden="true">
                     <span className="fp-preview-hint">Click to preview</span>
                   </div>
@@ -173,6 +178,7 @@ export default function FramePicker({ file, onSeek }: Props) {
                       </button>
                     </div>
                   </div>
+                  {frame.scene?.label && <p className="fp-scene">{frame.scene.label}</p>}
                   <p className="fp-reason">{frame.reason}</p>
                 </div>
               </div>
@@ -204,7 +210,11 @@ export default function FramePicker({ file, onSeek }: Props) {
                 <ChevronLeft size={18} />
               </button>
               <div className="fp-lb-info">
-                <span className="fp-lb-ts">{formatTime(previewFrame.timestamp)}</span>
+                <span className="fp-lb-ts">
+                  {formatTime(previewFrame.timestamp)}
+                  {previewFrame.score != null && <span className="fp-lb-score"> · {previewFrame.score}/100</span>}
+                  {previewFrame.scene?.label && <span className="fp-lb-score"> · {previewFrame.scene.label}</span>}
+                </span>
                 <span className="fp-lb-reason">{previewFrame.reason}</span>
               </div>
               <button className="fp-lb-nav" onClick={nextPreview} disabled={preview === frames.length - 1} aria-label="Next frame">

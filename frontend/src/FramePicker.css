@@ -164,6 +164,24 @@
 
 .fp-reason { font-size: 11px; color: var(--text-3); line-height: 1.4; margin: 0; }
 
+.fp-score {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 7px; border-radius: 100px;
+  pointer-events: none;
+}
+
+.fp-scene {
+  font-size: 10px; color: var(--text-4);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.fp-lb-score { font-weight: 400; color: var(--text-3); }
+
 /* Lightbox */
 .fp-lightbox {
   position: fixed; inset: 0;
