@@ -244,6 +244,20 @@
 .fp-lb-ts { font-size: 13px; font-weight: 600; color: var(--text-1); font-variant-numeric: tabular-nums; }
 .fp-lb-reason { font-size: 12px; color: var(--text-3); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+.fp-lb-sticker {
+  display: flex; align-items: center; gap: 6px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  color: var(--text-2);
+  font-size: 12px; font-weight: 500;
+  padding: 8px 14px;
+  cursor: pointer; font-family: inherit;
+  white-space: nowrap; min-height: 36px; flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fp-lb-sticker:hover { color: var(--text-1); border-color: var(--brand); }
+
 .fp-lb-dl {
   display: flex; align-items: center; gap: 6px;
   background: var(--brand);

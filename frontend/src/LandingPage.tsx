@@ -172,11 +172,11 @@ export default function LandingPage({ onStart }: Props) {
           <div className="va-feat-grid" role="list">
             {[
               { num: "01", title: "Best frame picker",   desc: "AI ranks every frame for sharpness and expression. Browse, select, and download as JPEG in seconds." },
-              { num: "02", title: "Image export",        desc: "Preview any frame full-size, pick your favorites, and download them all — ready for thumbnails, posts, and profiles." },
-              { num: "03", title: "AI scene analysis",   desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
-              { num: "04", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
-              { num: "05", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
-              { num: "06", title: "Saved configs",       desc: "Save your prompt and preset. Rerun the same analysis on any new video instantly." },
+              { num: "02", title: "Sticker generator",   desc: "Turn any frame into a die-cut sticker — cartoon, 3D, pixel art, or oil paint — exported as transparent PNG or WebP." },
+              { num: "03", title: "Image export",        desc: "Preview any frame full-size, pick your favorites, and download them all — ready for thumbnails, posts, and profiles." },
+              { num: "04", title: "AI scene analysis",   desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
+              { num: "05", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
+              { num: "06", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
             ].map(f => (
               <div className="va-feat va-reveal" key={f.num} role="listitem">
                 <span className="va-feat-num" aria-hidden="true">{f.num}</span>

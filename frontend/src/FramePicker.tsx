@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Image, Download, Loader, CheckCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Image, Download, Loader, CheckCircle, X, ChevronLeft, ChevronRight, Sticker } from "lucide-react";
 import type { BestFrame } from "./api";
 import { getBestFrames } from "./api";
+import StickerModal from "./StickerModal";
 import "./FramePicker.css";
 
 interface Props {
@@ -24,6 +25,7 @@ export default function FramePicker({ file, onSeek }: Props) {
   const [done, setDone] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<number | null>(null);
+  const [stickerOpen, setStickerOpen] = useState(false);
 
   async function handleExtract() {
     setLoading(true);
@@ -220,12 +222,22 @@ export default function FramePicker({ file, onSeek }: Props) {
               <button className="fp-lb-nav" onClick={nextPreview} disabled={preview === frames.length - 1} aria-label="Next frame">
                 <ChevronRight size={18} />
               </button>
+              <button className="fp-lb-sticker" onClick={() => setStickerOpen(true)}>
+                <Sticker size={14} /> Sticker
+              </button>
               <button className="fp-lb-dl" onClick={() => downloadFrame(previewFrame, preview)}>
                 <Download size={14} /> Download
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {stickerOpen && previewFrame && (
+        <StickerModal
+          imageB64={previewFrame.image_b64}
+          onClose={() => setStickerOpen(false)}
+        />
       )}
     </div>
   );

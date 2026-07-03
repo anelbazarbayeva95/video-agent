@@ -9,9 +9,10 @@ Built with Gemini, FastAPI, and React.
 1. Upload any video (mp4, mov, avi, webm, mkv)
 2. AI ranks every frame for sharpness, expression, and composition
 3. Browse the best frames in a grid, preview full-size, and download your picks as JPEGs
-4. Optionally run scene analysis: an interactive timeline with segment markers, cut recommendations, and pacing notes
-5. Export a trimmed MP4 or .srt captions from the same panel
-6. Save prompt configs and re-run on new clips in one click
+4. Turn any frame into a die-cut sticker — cartoon, 3D, pixel art, or oil paint — exported as transparent PNG or WebP
+5. Optionally run scene analysis: an interactive timeline with segment markers, cut recommendations, and pacing notes
+6. Export a trimmed MP4 or .srt captions from the same panel
+7. Save prompt configs and re-run on new clips in one click
 
 ## Stack
 
@@ -60,5 +61,7 @@ data: {"type": "status", "message": "Sending to Gemini..."}
 data: {"type": "result", "data": { ...analysis }}
 data: [DONE]
 ```
+
+`POST /sticker` — accepts an image file + `style` (`original`, `cartoon`, `3d`, `pixel`, `oil`) + `format` (`png`, `webp`). The Gemini image model renders the subject as a die-cut sticker on a solid background, which is then chroma-keyed to real transparency. Returns the sticker image.
 
 `POST /trim` — accepts a video file + segments to remove, returns a trimmed MP4.

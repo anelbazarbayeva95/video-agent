@@ -124,6 +124,39 @@ export async function getBestFrames(file: File, prompt?: string): Promise<BestFr
   return data.frames;
 }
 
+export const STICKER_STYLES = [
+  { id: "cartoon", label: "Cartoon" },
+  { id: "3d", label: "3D" },
+  { id: "pixel", label: "Pixel art" },
+  { id: "oil", label: "Oil paint" },
+  { id: "original", label: "Original" },
+] as const;
+
+export type StickerStyle = (typeof STICKER_STYLES)[number]["id"];
+
+export async function makeSticker(imageB64: string, style: StickerStyle): Promise<Blob> {
+  const bin = atob(imageB64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+  const form = new FormData();
+  form.append("file", new Blob([bytes], { type: "image/jpeg" }), "frame.jpg");
+  form.append("style", style);
+  form.append("format", "png");
+
+  const res = await fetch(`${API}/sticker`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Sticker generation failed");
+  }
+
+  return res.blob();
+}
+
 export function exportSRT(segments: Segment[]): string {
   return segments
     .map((seg, i) => {
