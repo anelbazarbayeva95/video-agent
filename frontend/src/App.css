@@ -111,6 +111,14 @@ button.header-brand:hover { opacity: 0.7; }
 /* ── Video section ───────────────────────────────────── */
 .video-section { display: flex; flex-direction: column; gap: 14px; }
 
+.video-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-3);
+  margin: 0;
+  text-align: center;
+}
+
 .video-player {
   width: 100%;
   border-radius: 10px;
