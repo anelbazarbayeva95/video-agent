@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Preflight is disabled to protect the legacy plain-CSS components, but the
+   new Tailwind UI needs buttons to be chrome-less by default. Legacy
+   components set their own (unlayered) button styles, which win over this. */
+@layer base {
+  button {
+    background-color: transparent;
+    background-image: none;
+    color: inherit;
+    cursor: pointer;
+  }
+}
