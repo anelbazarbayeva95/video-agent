@@ -25,14 +25,18 @@ def health():
 
 
 @app.post("/best-frames")
-async def best_frames(file: UploadFile = File(...), prompt: str = Form(None)):
+async def best_frames(
+    file: UploadFile = File(...),
+    prompt: str = Form(None),
+    count: int = Form(5),
+):
     ext = file.filename.rsplit(".", 1)[-1].lower()
     if ext not in ("mp4", "mov", "avi", "webm", "mkv"):
         raise HTTPException(400, "Unsupported format")
 
     contents = await file.read()
     try:
-        frames = extract_best_frames(contents, ext, prompt)
+        frames = extract_best_frames(contents, ext, prompt, count=count)
         return {"frames": frames}
     except Exception as e:
         raise HTTPException(500, str(e))

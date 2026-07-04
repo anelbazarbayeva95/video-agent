@@ -20,12 +20,18 @@ export interface BestFrame {
   score?: number | null;
   scores?: FrameScores;
   scene?: FrameScene;
+  label?: string;
 }
 
-export async function getBestFrames(file: File, prompt?: string): Promise<BestFrame[]> {
+export async function getBestFrames(
+  file: File,
+  prompt?: string,
+  count?: number,
+): Promise<BestFrame[]> {
   const form = new FormData();
   form.append("file", file);
   if (prompt) form.append("prompt", prompt);
+  if (count != null) form.append("count", String(count));
 
   const res = await fetch(`${API}/best-frames`, {
     method: "POST",
