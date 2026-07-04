@@ -50,6 +50,8 @@ Open `http://localhost:5173`
 
 `POST /best-frames` — accepts a video file + optional prompt. AI groups the video into scenes, picks the top candidate frames per scene, and returns them ranked as base64 JPEGs with metadata: timestamp, overall score, sub-scores (sharpness, face, composition), and scene info.
 
+`POST /asset-pack` — accepts a video file + optional `prompt`, `count` (best frames, default 5), and `sticker_style`. Runs the full pipeline and **streams** SSE events as assets become ready: `status` (per stage), `frames` (the best-frame set), then `asset` events for the 16:9 thumbnail, 9:16 story, and stickers, ending with `done`. Lets the UI reveal assets incrementally.
+
 `POST /reframe` — accepts an image file + `aspect` (`16:9` thumbnail, `9:16` story, `1:1` square). Gemini detects the subject's bounding box and the image is cropped to that aspect keeping the subject centered (no upscaling or generative expansion). Returns a JPEG.
 
 `POST /sticker` — accepts an image file + `style` + `format` (`png`, `webp`). Styles: `cutout` (faithful Apple-style subject lift, keeps real pixels — best for people/pets/products), `photo` (whole-frame rounded-corner photo sticker, no model call — best for scenes/landscapes), and `cartoon`, `3d`, `pixel`, `oil` (generative redraws). All get a white die-cut outline and are tight-cropped; generative and cutout outputs are chroma-keyed from a magenta background to real transparency. Returns the sticker image.
