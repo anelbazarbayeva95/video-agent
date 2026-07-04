@@ -1,4 +1,6 @@
 import os
+import glob
+import shutil
 import tempfile
 import base64
 import json
@@ -119,23 +121,33 @@ def extract_frames(video_path: str, max_frames: int = 40):
     if not duration:
         raise RuntimeError("Could not determine video duration")
 
-    if duration <= max_frames:
-        timestamps = [float(i) for i in range(int(duration))]
-    else:
-        step = duration / max_frames
-        timestamps = [step * i for i in range(max_frames)]
+    interval = 1.0 if duration <= max_frames else duration / max_frames
 
-    frames = []
-    for ts in timestamps:
+    # Decode once and sample with the fps filter. Avoids per-timestamp input
+    # seeking, which fails on many phone videos ("no packets received").
+    scale = "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"
+    out_dir = tempfile.mkdtemp(prefix="analyze_")
+    pattern = os.path.join(out_dir, "f_%04d.jpg")
+    try:
         try:
-            out, _ = (
-                ffmpeg.input(video_path, ss=ts)
-                .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
-                        **{"vf": "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"} )
+            (
+                ffmpeg.input(video_path)
+                .output(pattern, vf=f"fps={1.0 / interval:.6f},{scale}", **{"q:v": "2"})
                 .run(capture_stdout=True, capture_stderr=True, quiet=True)
             )
         except ffmpeg.Error as e:
-            raise RuntimeError(f"ffmpeg failed at {ts:.1f}s: {_stderr_tail(e)}")
-        frames.append(base64.b64encode(out).decode())
+            raise RuntimeError(f"ffmpeg frame sampling failed: {_stderr_tail(e)}")
+
+        files = sorted(glob.glob(os.path.join(out_dir, "f_*.jpg")))[:max_frames]
+        if not files:
+            raise RuntimeError("No frames could be decoded from the video")
+
+        frames, timestamps = [], []
+        for i, fp in enumerate(files):
+            with open(fp, "rb") as fh:
+                frames.append(base64.b64encode(fh.read()).decode())
+            timestamps.append(round(i * interval, 1))
+    finally:
+        shutil.rmtree(out_dir, ignore_errors=True)
 
     return frames, timestamps, duration
