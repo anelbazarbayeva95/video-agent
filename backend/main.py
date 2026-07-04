@@ -14,7 +14,7 @@ from sticker import generate_sticker, STYLES
 
 load_dotenv()
 
-app = FastAPI(title="Video Analysis Agent")
+app = FastAPI(title="Kadr API")
 
 app.add_middleware(
     CORSMiddleware,

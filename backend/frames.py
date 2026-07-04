@@ -49,14 +49,32 @@ Return ONLY valid JSON with this structure:
 Order scenes chronologically, and frames within each scene from best to least good."""
 
 
+def _stderr_tail(e: ffmpeg.Error) -> str:
+    if getattr(e, "stderr", None):
+        lines = [l for l in e.stderr.decode(errors="replace").splitlines() if l.strip()]
+        return " | ".join(lines[-3:])[-400:]
+    return "no stderr captured"
+
+
 def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None) -> list[dict]:
     with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
         tmp.write(video_bytes)
         tmp_path = tmp.name
 
     try:
-        probe = ffmpeg.probe(tmp_path)
-        duration = float(probe["format"]["duration"])
+        try:
+            probe = ffmpeg.probe(tmp_path)
+        except ffmpeg.Error as e:
+            raise RuntimeError(f"ffprobe failed: {_stderr_tail(e)}")
+
+        duration = float(probe["format"].get("duration") or 0)
+        if not duration:
+            duration = max(
+                (float(s["duration"]) for s in probe["streams"] if s.get("duration")),
+                default=0,
+            )
+        if not duration:
+            raise RuntimeError("Could not determine video duration")
 
         # Sample up to 40 frames evenly across full duration
         max_frames = 40
@@ -66,16 +84,21 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
             step = duration / max_frames
             timestamps = [step * i for i in range(max_frames)]
 
-        # Extract frames
+        # Extract frames, downscaled to max 1280px on the long side
+        scale = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
         raw_frames = []
         for ts in timestamps:
-            out, err = (
-                ffmpeg.input(tmp_path, ss=ts)
-                .output("pipe:", vframes=1, format="image2", vcodec="mjpeg", **{"q:v": "1"})
-                .run(capture_stdout=True, capture_stderr=True)
-            )
+            try:
+                out, err = (
+                    ffmpeg.input(tmp_path, ss=ts)
+                    .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
+                            **{"q:v": "2", "vf": scale})
+                    .run(capture_stdout=True, capture_stderr=True)
+                )
+            except ffmpeg.Error as e:
+                raise RuntimeError(f"ffmpeg failed at {ts:.1f}s: {_stderr_tail(e)}")
             if not out:
-                raise RuntimeError(f"ffmpeg produced no output at {ts}s: {err.decode()}")
+                raise RuntimeError(f"ffmpeg produced no output at {ts}s: {err.decode(errors='replace')[-400:]}")
             raw_frames.append((ts, out))
 
         # Ask Gemini to group scenes and score candidate frames

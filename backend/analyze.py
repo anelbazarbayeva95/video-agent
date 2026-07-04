@@ -97,9 +97,27 @@ async def analyze_video(video_bytes: bytes, ext: str, custom_prompt: str = None)
         os.unlink(tmp_path)
 
 
+def _stderr_tail(e: ffmpeg.Error) -> str:
+    if getattr(e, "stderr", None):
+        lines = [l for l in e.stderr.decode(errors="replace").splitlines() if l.strip()]
+        return " | ".join(lines[-3:])[-400:]
+    return "no stderr captured"
+
+
 def extract_frames(video_path: str, max_frames: int = 40):
-    probe = ffmpeg.probe(video_path)
-    duration = float(probe["format"]["duration"])
+    try:
+        probe = ffmpeg.probe(video_path)
+    except ffmpeg.Error as e:
+        raise RuntimeError(f"ffprobe failed: {_stderr_tail(e)}")
+
+    duration = float(probe["format"].get("duration") or 0)
+    if not duration:
+        duration = max(
+            (float(s["duration"]) for s in probe["streams"] if s.get("duration")),
+            default=0,
+        )
+    if not duration:
+        raise RuntimeError("Could not determine video duration")
 
     if duration <= max_frames:
         timestamps = [float(i) for i in range(int(duration))]
@@ -109,12 +127,15 @@ def extract_frames(video_path: str, max_frames: int = 40):
 
     frames = []
     for ts in timestamps:
-        out, _ = (
-            ffmpeg.input(video_path, ss=ts)
-            .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
-                    **{"vf": "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"} )
-            .run(capture_stdout=True, capture_stderr=True, quiet=True)
-        )
+        try:
+            out, _ = (
+                ffmpeg.input(video_path, ss=ts)
+                .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
+                        **{"vf": "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"} )
+                .run(capture_stdout=True, capture_stderr=True, quiet=True)
+            )
+        except ffmpeg.Error as e:
+            raise RuntimeError(f"ffmpeg failed at {ts:.1f}s: {_stderr_tail(e)}")
         frames.append(base64.b64encode(out).decode())
 
     return frames, timestamps, duration
