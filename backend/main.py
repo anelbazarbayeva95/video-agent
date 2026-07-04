@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from frames import extract_best_frames
 from sticker import generate_sticker, STYLES
+from reframe import smart_crop, ASPECTS
 
 load_dotenv()
 
@@ -63,4 +64,22 @@ async def sticker(
         content=image,
         media_type=f"image/{format}",
         headers={"Content-Disposition": f'attachment; filename="sticker.{format}"'},
+    )
+
+
+@app.post("/reframe")
+async def reframe(file: UploadFile = File(...), aspect: str = Form("16:9")):
+    if aspect not in ASPECTS:
+        raise HTTPException(400, f"Unknown aspect. Options: {', '.join(ASPECTS)}")
+
+    contents = await file.read()
+    try:
+        image = smart_crop(contents, aspect)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+    return Response(
+        content=image,
+        media_type="image/jpeg",
+        headers={"Content-Disposition": 'attachment; filename="reframe.jpg"'},
     )
