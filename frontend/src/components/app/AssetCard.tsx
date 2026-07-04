@@ -68,7 +68,7 @@ export default function AssetCard({
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <span className="truncate text-xs font-medium text-white/80">{label}</span>
         {sublabel && (
-          <span className="shrink-0 text-[11px] tabular-nums text-white/40">{sublabel}</span>
+          <span className="shrink-0 text-[11px] tabular-nums text-white/60">{sublabel}</span>
         )}
       </div>
     </motion.div>

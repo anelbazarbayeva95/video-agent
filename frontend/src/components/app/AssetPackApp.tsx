@@ -106,7 +106,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="kadr-app min-h-screen bg-[#050505] text-white">
       {/* Top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-[#050505]/80 px-6 py-4 backdrop-blur">
         <button onClick={onBack} className="flex items-center gap-2 bg-transparent text-white" aria-label="Back to home">
@@ -142,7 +142,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
             </div>
             <div>
               <p className="text-lg font-medium">Drop a video to create an asset pack</p>
-              <p className="mt-1 text-sm text-white/50">
+              <p className="mt-1 text-sm text-white/65">
                 Kadr finds the best frames and turns them into social-ready visuals.
               </p>
             </div>
@@ -169,7 +169,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                   />
                 )}
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-                  <p className="mb-3 text-xs uppercase tracking-[0.18em] text-white/40">
+                  <p className="mb-3 text-xs uppercase tracking-[0.18em] text-white/60" aria-live="polite">
                     {done ? "Done" : "Generating"}
                   </p>
                   <ProcessingTimeline steps={steps} />

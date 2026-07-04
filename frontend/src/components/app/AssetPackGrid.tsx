@@ -25,8 +25,8 @@ function Section({ title, count, children }: { title: string; count?: string; ch
   return (
     <section className="mt-10 first:mt-0">
       <div className="mb-3 flex items-baseline gap-3">
-        <h3 className="text-xs uppercase tracking-[0.18em] text-white/40">{title}</h3>
-        {count && <span className="text-[11px] text-white/25">{count}</span>}
+        <h3 className="text-xs uppercase tracking-[0.18em] text-white/60">{title}</h3>
+        {count && <span className="text-[11px] text-white/55">{count}</span>}
       </div>
       {children}
     </section>
