@@ -1,4 +1,6 @@
 import os
+import glob
+import shutil
 import base64
 import json
 import tempfile
@@ -56,6 +58,38 @@ def _stderr_tail(e: ffmpeg.Error) -> str:
     return "no stderr captured"
 
 
+SCALE_FILTER = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
+
+
+def _sample_frames(video_path: str, interval: float, max_frames: int) -> list[tuple[float, bytes]]:
+    """Decode the whole video once, emitting one frame every `interval` seconds.
+
+    Returns (timestamp, jpeg_bytes) pairs. Robust to seek-unfriendly inputs
+    because it never seeks — it filters frames out of a single decode pass.
+    """
+    out_dir = tempfile.mkdtemp(prefix="frames_")
+    fps_val = 1.0 / interval
+    pattern = os.path.join(out_dir, "f_%04d.jpg")
+    try:
+        try:
+            (
+                ffmpeg.input(video_path)
+                .output(pattern, vf=f"fps={fps_val:.6f},{SCALE_FILTER}", **{"q:v": "2"})
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+        except ffmpeg.Error as e:
+            raise RuntimeError(f"ffmpeg frame sampling failed: {_stderr_tail(e)}")
+
+        files = sorted(glob.glob(os.path.join(out_dir, "f_*.jpg")))[:max_frames]
+        frames = []
+        for i, fp in enumerate(files):
+            with open(fp, "rb") as fh:
+                frames.append((round(i * interval, 1), fh.read()))
+        return frames
+    finally:
+        shutil.rmtree(out_dir, ignore_errors=True)
+
+
 def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None) -> list[dict]:
     with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
         tmp.write(video_bytes)
@@ -76,30 +110,19 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
         if not duration:
             raise RuntimeError("Could not determine video duration")
 
-        # Sample up to 40 frames evenly across full duration
+        # Sample up to 40 frames evenly across the full duration in a single
+        # decode pass. Per-timestamp input seeking (-ss before -i) is fast but
+        # fails on many phone videos (non-zero start PTS, sparse keyframes),
+        # yielding "no packets received"; decoding once with the fps filter is
+        # slower but reliable.
         max_frames = 40
         if duration <= max_frames:
-            timestamps = [float(i) for i in range(int(duration))]
+            interval = 1.0
         else:
-            step = duration / max_frames
-            timestamps = [step * i for i in range(max_frames)]
-
-        # Extract frames, downscaled to max 1280px on the long side
-        scale = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
-        raw_frames = []
-        for ts in timestamps:
-            try:
-                out, err = (
-                    ffmpeg.input(tmp_path, ss=ts)
-                    .output("pipe:", vframes=1, format="image2", vcodec="mjpeg",
-                            **{"q:v": "2", "vf": scale})
-                    .run(capture_stdout=True, capture_stderr=True)
-                )
-            except ffmpeg.Error as e:
-                raise RuntimeError(f"ffmpeg failed at {ts:.1f}s: {_stderr_tail(e)}")
-            if not out:
-                raise RuntimeError(f"ffmpeg produced no output at {ts}s: {err.decode(errors='replace')[-400:]}")
-            raw_frames.append((ts, out))
+            interval = duration / max_frames
+        raw_frames = _sample_frames(tmp_path, interval, max_frames)
+        if not raw_frames:
+            raise RuntimeError("No frames could be decoded from the video")
 
         # Ask Gemini to group scenes and score candidate frames
         contents = []
