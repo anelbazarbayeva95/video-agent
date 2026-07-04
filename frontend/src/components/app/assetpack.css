@@ -26,3 +26,11 @@
 @media (prefers-reduced-motion: reduce) {
   .asset-shimmer { animation: none; }
 }
+
+/* Visible keyboard focus (WCAG 2.4.7), scoped to the dark app so it doesn't
+   affect the light-theme legacy components. */
+.kadr-app :focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

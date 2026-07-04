@@ -18,7 +18,7 @@ export default function ProcessingTimeline({ steps }: { steps: Step[] }) {
                 ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
                 : s.state === "active"
                 ? "border-white/30 bg-white/10 text-white"
-                : "border-white/10 text-white/30"
+                : "border-white/15 text-white/55"
             }`}
           >
             {s.state === "complete" ? (
@@ -37,7 +37,7 @@ export default function ProcessingTimeline({ steps }: { steps: Step[] }) {
           </span>
           <span
             className={`text-xs ${
-              s.state === "pending" ? "text-white/35" : "text-white/75"
+              s.state === "pending" ? "text-white/55" : "text-white/80"
             }`}
           >
             {s.label}
