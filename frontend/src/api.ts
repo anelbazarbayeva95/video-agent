@@ -47,6 +47,66 @@ export async function getBestFrames(
   return data.frames;
 }
 
+export interface PackAsset {
+  kind: "thumbnail" | "story" | "sticker";
+  aspect?: string;
+  image_b64: string;
+  mime: string;
+  timestamp?: number;
+  label?: string;
+}
+
+export type AssetPackEvent =
+  | { type: "status"; stage: string; message: string }
+  | { type: "frames"; frames: BestFrame[] }
+  | { type: "asset"; asset: PackAsset }
+  | { type: "asset_error"; kind: string; message: string }
+  | { type: "error"; message: string }
+  | { type: "done" };
+
+export interface AssetPackOptions {
+  prompt?: string;
+  count?: number;
+  stickerStyle?: string;
+}
+
+export async function buildAssetPack(
+  file: File,
+  onEvent: (e: AssetPackEvent) => void,
+  opts: AssetPackOptions = {},
+): Promise<void> {
+  const form = new FormData();
+  form.append("file", file);
+  if (opts.prompt) form.append("prompt", opts.prompt);
+  if (opts.count != null) form.append("count", String(opts.count));
+  if (opts.stickerStyle) form.append("sticker_style", opts.stickerStyle);
+
+  const res = await fetch(`${API}/asset-pack`, { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Asset pack failed");
+  }
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6).trim();
+      if (raw === "[DONE]") return;
+      try {
+        onEvent(JSON.parse(raw));
+      } catch {}
+    }
+  }
+}
+
 export type Aspect = "16:9" | "9:16" | "1:1";
 
 export async function reframe(imageB64: string, aspect: Aspect): Promise<Blob> {

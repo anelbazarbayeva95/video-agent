@@ -1,11 +1,14 @@
+import json
+
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from dotenv import load_dotenv
 
 from frames import extract_best_frames
 from sticker import generate_sticker, STYLES
 from reframe import smart_crop, ASPECTS
+from asset_pack import build_asset_pack
 
 load_dotenv()
 
@@ -65,6 +68,29 @@ async def sticker(
         media_type=f"image/{format}",
         headers={"Content-Disposition": f'attachment; filename="sticker.{format}"'},
     )
+
+
+@app.post("/asset-pack")
+async def asset_pack(
+    file: UploadFile = File(...),
+    prompt: str = Form(None),
+    count: int = Form(5),
+    sticker_style: str = Form("cutout"),
+):
+    ext = file.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ("mp4", "mov", "avi", "webm", "mkv"):
+        raise HTTPException(400, "Unsupported format")
+    if sticker_style not in STYLES:
+        raise HTTPException(400, f"Unknown sticker style. Options: {', '.join(STYLES)}")
+
+    contents = await file.read()
+
+    async def stream():
+        async for event in build_asset_pack(contents, ext, prompt, count, sticker_style):
+            yield f"data: {json.dumps(event)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(stream(), media_type="text/event-stream")
 
 
 @app.post("/reframe")
