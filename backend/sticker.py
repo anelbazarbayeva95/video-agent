@@ -2,7 +2,7 @@ import io
 import os
 from collections import deque
 from statistics import median
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageDraw
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -25,7 +25,8 @@ KEY_SOFT = 120   # feather band at the subject edge
 # magenta background that is keyed out; the white die-cut outline and the
 # tight crop are added by us afterward (not by the model).
 STYLES = {
-    "cutout": None,  # handled by CUTOUT_PROMPT below
+    "cutout": None,  # faithful subject lift (CUTOUT_PROMPT); best for people/pets/products
+    "photo": None,   # whole-frame rounded photo sticker (no model); best for scenes
     "cartoon": "Redraw the subject as a bold-outline, flat-color cartoon illustration.",
     "3d": "Re-render the subject as a glossy 3D animated-movie character with soft studio lighting.",
     "pixel": "Redraw the subject as retro 16-bit pixel art with a limited color palette.",
@@ -137,13 +138,42 @@ def _add_die_cut(img: Image.Image, outline_frac: float = OUTLINE_FRAC) -> Image.
     return base.crop(final) if final else base
 
 
+def _photo_sticker(image_bytes: bytes, fmt: str) -> bytes:
+    """Whole-frame rounded-rectangle photo sticker (no model call).
+
+    Keeps the real frame, rounds the corners, and adds a white die-cut
+    border. Robust for scenic frames (skylines, landscapes) that have no
+    single subject to lift.
+    """
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    img.thumbnail((1024, 1024))
+    w, h = img.size
+    radius = round(0.06 * min(w, h))
+
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
+    img.putalpha(mask)
+
+    # Inset on a transparent margin so the white die-cut border has room.
+    margin = round(0.06 * max(w, h))
+    canvas = Image.new("RGBA", (w + 2 * margin, h + 2 * margin), (0, 0, 0, 0))
+    canvas.paste(img, (margin, margin), img)
+
+    canvas = _add_die_cut(canvas)
+    buf = io.BytesIO()
+    canvas.save(buf, format=fmt.upper())
+    return buf.getvalue()
+
+
 def generate_sticker(image_bytes: bytes, style: str = "cutout", fmt: str = "png") -> bytes:
     if style not in STYLES:
         raise ValueError(f"Unknown style '{style}'. Options: {', '.join(STYLES)}")
     if fmt not in ("png", "webp"):
         raise ValueError("Format must be png or webp")
 
-    if style == "cutout":
+    if style == "photo":
+        return _photo_sticker(image_bytes, fmt)
+    elif style == "cutout":
         prompt = CUTOUT_PROMPT
     else:
         prompt = STYLE_PROMPT.format(style=STYLES[style])

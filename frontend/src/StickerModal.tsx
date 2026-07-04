@@ -111,6 +111,14 @@ export default function StickerModal({ imageB64, onClose }: Props) {
           ))}
         </div>
 
+        <p className="sm-hint">
+          {style === "cutout"
+            ? "Best for a clear subject — people, pets, products."
+            : style === "photo"
+            ? "Whole frame with rounded corners — best for scenes and landscapes."
+            : "Redraws the subject in this art style."}
+        </p>
+
         {error && <p className="sm-error" role="alert">{error}</p>}
 
         <div className="sm-footer">
