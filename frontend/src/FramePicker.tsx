@@ -25,7 +25,7 @@ export default function FramePicker({ file, onSeek }: Props) {
   const [done, setDone] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<number | null>(null);
-  const [stickerOpen, setStickerOpen] = useState(false);
+  const [stickerIdx, setStickerIdx] = useState<number | null>(null);
 
   async function handleExtract() {
     setLoading(true);
@@ -172,6 +172,13 @@ export default function FramePicker({ file, onSeek }: Props) {
                         {selected.has(i) ? "✓ Selected" : "Select"}
                       </button>
                       <button
+                        className="fp-sticker-btn"
+                        onClick={() => setStickerIdx(i)}
+                        aria-label={`Make a sticker from frame at ${formatTime(frame.timestamp)}`}
+                      >
+                        <Sticker size={12} /> Sticker
+                      </button>
+                      <button
                         className="fp-dl-single"
                         onClick={() => downloadFrame(frame, i)}
                         aria-label={`Download frame at ${formatTime(frame.timestamp)}`}
@@ -222,7 +229,7 @@ export default function FramePicker({ file, onSeek }: Props) {
               <button className="fp-lb-nav" onClick={nextPreview} disabled={preview === frames.length - 1} aria-label="Next frame">
                 <ChevronRight size={18} />
               </button>
-              <button className="fp-lb-sticker" onClick={() => setStickerOpen(true)}>
+              <button className="fp-lb-sticker" onClick={() => setStickerIdx(preview)}>
                 <Sticker size={14} /> Sticker
               </button>
               <button className="fp-lb-dl" onClick={() => downloadFrame(previewFrame, preview)}>
@@ -233,10 +240,10 @@ export default function FramePicker({ file, onSeek }: Props) {
         </div>
       )}
 
-      {stickerOpen && previewFrame && (
+      {stickerIdx !== null && frames[stickerIdx] && (
         <StickerModal
-          imageB64={previewFrame.image_b64}
-          onClose={() => setStickerOpen(false)}
+          imageB64={frames[stickerIdx].image_b64}
+          onClose={() => setStickerIdx(null)}
         />
       )}
     </div>
