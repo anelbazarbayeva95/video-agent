@@ -61,7 +61,41 @@ def _stderr_tail(e: ffmpeg.Error) -> str:
 SCALE_FILTER = "scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))'"
 
 
-def _sample_frames(video_path: str, interval: float, max_frames: int) -> list[tuple[float, bytes]]:
+def pick_video_stream(probe: dict):
+    """Return the index of the real video stream, skipping attached cover art.
+
+    Social/phone videos often embed a still thumbnail as a second video
+    stream (disposition.attached_pic=1). Left to auto-selection, ffmpeg can
+    map that packet-less stream and abort with 'no packets received', so we
+    choose the largest genuine video stream explicitly.
+    """
+    vids = [s for s in probe.get("streams", []) if s.get("codec_type") == "video"]
+    if not vids:
+        return None
+    real = [s for s in vids if s.get("disposition", {}).get("attached_pic", 0) != 1]
+    pool = real or vids
+    best = max(pool, key=lambda s: (s.get("width") or 0) * (s.get("height") or 0))
+    return best.get("index")
+
+
+def probe_summary(probe: dict) -> str:
+    """Compact per-stream description for diagnostics on failure."""
+    parts = []
+    for s in probe.get("streams", []):
+        if s.get("codec_type") == "video":
+            d = s.get("disposition", {})
+            parts.append(
+                f"v#{s.get('index')} {s.get('codec_name')}/{s.get('pix_fmt')} "
+                f"{s.get('width')}x{s.get('height')} "
+                f"attached_pic={d.get('attached_pic')} nb_frames={s.get('nb_frames')}"
+            )
+        elif s.get("codec_type") in ("audio", "data", "subtitle"):
+            parts.append(f"{s.get('codec_type')}#{s.get('index')} {s.get('codec_name')}")
+    return "; ".join(parts) or "no streams"
+
+
+def _sample_frames(video_path: str, interval: float, max_frames: int,
+                   stream_index=None, diag: str = "") -> list[tuple[float, bytes]]:
     """Decode the whole video once, emitting one frame every `interval` seconds.
 
     Returns (timestamp, jpeg_bytes) pairs. Robust to seek-unfriendly inputs
@@ -72,13 +106,18 @@ def _sample_frames(video_path: str, interval: float, max_frames: int) -> list[tu
     pattern = os.path.join(out_dir, "f_%04d.jpg")
     try:
         try:
+            args = {"vf": f"fps={fps_val:.6f},{SCALE_FILTER}", "q:v": "2", "an": None}
+            if stream_index is not None:
+                args["map"] = f"0:{stream_index}"
             (
                 ffmpeg.input(video_path)
-                .output(pattern, vf=f"fps={fps_val:.6f},{SCALE_FILTER}", **{"q:v": "2"})
+                .output(pattern, **args)
                 .run(capture_stdout=True, capture_stderr=True)
             )
         except ffmpeg.Error as e:
-            raise RuntimeError(f"ffmpeg frame sampling failed: {_stderr_tail(e)}")
+            raise RuntimeError(
+                f"ffmpeg frame sampling failed: {_stderr_tail(e)} [streams: {diag}]"
+            )
 
         files = sorted(glob.glob(os.path.join(out_dir, "f_*.jpg")))[:max_frames]
         frames = []
@@ -120,9 +159,13 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
             interval = 1.0
         else:
             interval = duration / max_frames
-        raw_frames = _sample_frames(tmp_path, interval, max_frames)
+        diag = probe_summary(probe)
+        raw_frames = _sample_frames(
+            tmp_path, interval, max_frames,
+            stream_index=pick_video_stream(probe), diag=diag,
+        )
         if not raw_frames:
-            raise RuntimeError("No frames could be decoded from the video")
+            raise RuntimeError(f"No frames could be decoded from the video [streams: {diag}]")
 
         # Ask Gemini to group scenes and score candidate frames
         contents = []

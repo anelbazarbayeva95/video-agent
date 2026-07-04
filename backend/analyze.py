@@ -124,23 +124,32 @@ def extract_frames(video_path: str, max_frames: int = 40):
     interval = 1.0 if duration <= max_frames else duration / max_frames
 
     # Decode once and sample with the fps filter. Avoids per-timestamp input
-    # seeking, which fails on many phone videos ("no packets received").
+    # seeking, which fails on many phone videos ("no packets received"), and
+    # explicitly maps the real video stream so an embedded cover-art thumbnail
+    # can't hijack the output.
+    from frames import pick_video_stream, probe_summary
+
     scale = "scale='if(gt(iw,ih),min(640,iw),-2)':'if(gt(iw,ih),-2,min(640,ih))'"
+    diag = probe_summary(probe)
+    stream_index = pick_video_stream(probe)
     out_dir = tempfile.mkdtemp(prefix="analyze_")
     pattern = os.path.join(out_dir, "f_%04d.jpg")
     try:
         try:
+            args = {"vf": f"fps={1.0 / interval:.6f},{scale}", "q:v": "2", "an": None}
+            if stream_index is not None:
+                args["map"] = f"0:{stream_index}"
             (
                 ffmpeg.input(video_path)
-                .output(pattern, vf=f"fps={1.0 / interval:.6f},{scale}", **{"q:v": "2"})
+                .output(pattern, **args)
                 .run(capture_stdout=True, capture_stderr=True, quiet=True)
             )
         except ffmpeg.Error as e:
-            raise RuntimeError(f"ffmpeg frame sampling failed: {_stderr_tail(e)}")
+            raise RuntimeError(f"ffmpeg frame sampling failed: {_stderr_tail(e)} [streams: {diag}]")
 
         files = sorted(glob.glob(os.path.join(out_dir, "f_*.jpg")))[:max_frames]
         if not files:
-            raise RuntimeError("No frames could be decoded from the video")
+            raise RuntimeError(f"No frames could be decoded from the video [streams: {diag}]")
 
         frames, timestamps = [], []
         for i, fp in enumerate(files):
