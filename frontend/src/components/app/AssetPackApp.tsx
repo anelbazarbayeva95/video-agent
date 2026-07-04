@@ -159,8 +159,8 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
           </motion.button>
         ) : (
           <div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
+              <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
                 {videoUrl && (
                   <video
                     src={videoUrl}
@@ -170,13 +170,13 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                 )}
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
                   <p className="mb-3 text-xs uppercase tracking-[0.18em] text-white/60" aria-live="polite">
-                    {done ? "Done" : "Generating"}
+                    {done ? "Asset pack ready" : "Generating"}
                   </p>
                   <ProcessingTimeline steps={steps} />
                 </div>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 {error && (
                   <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                     {error}
