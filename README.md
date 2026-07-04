@@ -50,4 +50,4 @@ Open `http://localhost:5173`
 
 `POST /best-frames` — accepts a video file + optional prompt. AI groups the video into scenes, picks the top candidate frames per scene, and returns them ranked as base64 JPEGs with metadata: timestamp, overall score, sub-scores (sharpness, face, composition), and scene info.
 
-`POST /sticker` — accepts an image file + `style` (`original`, `cartoon`, `3d`, `pixel`, `oil`) + `format` (`png`, `webp`). The Gemini image model renders the subject as a die-cut sticker on a solid background, which is then chroma-keyed to real transparency. Returns the sticker image.
+`POST /sticker` — accepts an image file + `style` + `format` (`png`, `webp`). Styles: `cutout` (a faithful Apple-style subject lift that keeps the real pixels), plus `cartoon`, `3d`, `pixel`, `oil` (generative redraws). In all cases the Gemini image model places the subject on a solid background, which is chroma-keyed to real transparency, then given a white die-cut outline and tight-cropped to the subject. Returns the sticker image.

@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function StickerModal({ imageB64, onClose }: Props) {
-  const [style, setStyle] = useState<StickerStyle>("cartoon");
+  const [style, setStyle] = useState<StickerStyle>("cutout");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);

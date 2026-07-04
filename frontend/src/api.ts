@@ -42,11 +42,11 @@ export async function getBestFrames(file: File, prompt?: string): Promise<BestFr
 }
 
 export const STICKER_STYLES = [
+  { id: "cutout", label: "Clean Cutout" },
   { id: "cartoon", label: "Cartoon" },
   { id: "3d", label: "3D" },
   { id: "pixel", label: "Pixel art" },
   { id: "oil", label: "Oil paint" },
-  { id: "original", label: "Original" },
 ] as const;
 
 export type StickerStyle = (typeof STICKER_STYLES)[number]["id"];

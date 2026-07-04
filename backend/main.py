@@ -41,7 +41,7 @@ async def best_frames(file: UploadFile = File(...), prompt: str = Form(None)):
 @app.post("/sticker")
 async def sticker(
     file: UploadFile = File(...),
-    style: str = Form("original"),
+    style: str = Form("cutout"),
     format: str = Form("png"),
 ):
     if style not in STYLES:
