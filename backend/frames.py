@@ -1,10 +1,12 @@
 import os
+import io
 import glob
 import shutil
 import base64
 import json
 import tempfile
 import ffmpeg
+from PIL import Image
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -13,7 +15,89 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-MAX_FRAMES_RETURNED = 18
+DEFAULT_COUNT = 5          # best frames returned by default (the Asset Pack set)
+MAX_COUNT = 24             # hard cap on a caller-requested count
+DUP_HAMMING = 6            # aHash distance below which two frames are near-duplicates
+
+
+def _signature(jpeg_bytes: bytes) -> tuple[int, tuple[int, int, int]]:
+    """(average hash, mean RGB) fingerprint for near-duplicate detection."""
+    im = Image.open(io.BytesIO(jpeg_bytes))
+    rgb = im.convert("RGB").resize((8, 8))
+    r = g = b = 0
+    for pr, pg, pb in rgb.getdata():
+        r += pr; g += pg; b += pb
+    n = 64
+    mean = (r // n, g // n, b // n)
+
+    gray = list(rgb.convert("L").getdata())
+    avg = sum(gray) / len(gray)
+    bits = 0
+    for i, p in enumerate(gray):
+        if p > avg:
+            bits |= 1 << i
+    return bits, mean
+
+
+def _is_duplicate(sig, seen: list) -> bool:
+    """Duplicate only if both the hash and the mean color are close — so two
+    different flat frames (e.g. distinct title cards) are not merged."""
+    h, mean = sig
+    for sh, smean in seen:
+        if bin(h ^ sh).count("1") <= DUP_HAMMING:
+            cdist = sum((a - b) ** 2 for a, b in zip(mean, smean)) ** 0.5
+            if cdist <= 40:
+                return True
+    return False
+
+
+def _moment_label(scores: dict, scene_label: str) -> str:
+    """Rule-based moment type for the Moment Map (see frontend spec)."""
+    face = scores.get("face")
+    sharp = scores.get("sharpness") or 0
+    comp = scores.get("composition") or 0
+    if face is not None and face >= 55:
+        return "Speaker Close-up"
+    if sharp >= 70 and (face is None or face < 30):
+        return "Clean Visual"
+    if comp >= 70:
+        return "Wide Scene"
+    return scene_label or "Moment"
+
+
+def _select_diverse(scenes_frames: list[list[dict]], count: int,
+                    frame_map: dict) -> list[dict]:
+    """Pick up to `count` frames preferring scene diversity, dropping near-dups.
+
+    Round-robin across scenes (best frame of each scene first, then the next
+    best of each, ...), skipping frames that visually duplicate an earlier pick.
+    """
+    def img_for(entry):
+        ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
+        return frame_map[ts]
+
+    # scenes ordered by their strongest frame
+    ordered = sorted(
+        scenes_frames,
+        key=lambda fs: max((f["score"] or 0) for f in fs) if fs else 0,
+        reverse=True,
+    )
+    selected, seen = [], []
+    round_idx = 0
+    while len(selected) < count and any(len(fs) > round_idx for fs in ordered):
+        for fs in ordered:
+            if round_idx >= len(fs):
+                continue
+            entry = fs[round_idx]
+            sig = _signature(img_for(entry))
+            if _is_duplicate(sig, seen):
+                continue
+            selected.append(entry)
+            seen.append(sig)
+            if len(selected) >= count:
+                break
+        round_idx += 1
+    return selected
 
 FRAME_PROMPT = """You are a visual quality expert. You are given frames from a video, each labeled with its timestamp.
 
@@ -129,7 +213,9 @@ def _sample_frames(video_path: str, interval: float, max_frames: int,
         shutil.rmtree(out_dir, ignore_errors=True)
 
 
-def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None) -> list[dict]:
+def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
+                        count: int = DEFAULT_COUNT) -> list[dict]:
+    count = max(1, min(count or DEFAULT_COUNT, MAX_COUNT))
     with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
         tmp.write(video_bytes)
         tmp_path = tmp.name
@@ -192,19 +278,25 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
 
         result = json.loads(raw)
 
-        # Flatten scenes into a single candidate list carrying scene metadata
-        candidates = []
+        # Build a lookup of ts → frame bytes
+        frame_map = {round(ts, 1): frame_bytes for ts, frame_bytes in raw_frames}
+
+        # Group candidates by scene, each scene's frames sorted best-first
+        scenes_frames = []
         for scene_idx, scene in enumerate(result.get("scenes", []), start=1):
+            frames = []
             for entry in scene.get("frames", []):
-                candidates.append({
+                scores = {
+                    "sharpness": entry.get("sharpness"),
+                    "face": entry.get("face"),
+                    "composition": entry.get("composition"),
+                }
+                frames.append({
                     "timestamp": entry["timestamp"],
                     "reason": entry.get("reason", ""),
                     "score": entry.get("score"),
-                    "scores": {
-                        "sharpness": entry.get("sharpness"),
-                        "face": entry.get("face"),
-                        "composition": entry.get("composition"),
-                    },
+                    "scores": scores,
+                    "label": _moment_label(scores, scene.get("label", "")),
                     "scene": {
                         "index": scene_idx,
                         "label": scene.get("label", ""),
@@ -212,20 +304,20 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None)
                         "end": scene.get("end"),
                     },
                 })
+            frames.sort(key=lambda f: f["score"] or 0, reverse=True)
+            if frames:
+                scenes_frames.append(frames)
 
-        # Rank across the whole video, best first
-        candidates.sort(key=lambda c: c["score"] or 0, reverse=True)
-        candidates = candidates[:MAX_FRAMES_RETURNED]
+        # Scene-diverse, de-duplicated selection of the top `count`
+        selected = _select_diverse(scenes_frames, count, frame_map)
+        selected.sort(key=lambda c: c["score"] or 0, reverse=True)
 
-        # Build a lookup of ts → frame bytes
-        frame_map = {round(ts, 1): frame_bytes for ts, frame_bytes in raw_frames}
-
-        # For each candidate, attach the actual image as base64
-        for entry in candidates:
+        # Attach the actual image bytes as base64
+        for entry in selected:
             closest_ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
             entry["image_b64"] = base64.b64encode(frame_map[closest_ts]).decode()
 
-        return candidates
+        return selected
 
     finally:
         os.unlink(tmp_path)
