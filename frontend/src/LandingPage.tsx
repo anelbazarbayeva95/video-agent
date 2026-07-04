@@ -7,10 +7,10 @@ const VIDEOS = ["v01", "v02", "v03", "v04"];
 const SHOTS_PER_VIDEO = 6;
 
 const CARDS = [
-  { phrase: "Pick best frames",    sub: "Every frame ranked by sharpness and expression",   visual: "grid"     },
-  { phrase: "Export as images",    sub: "Download your favorites as JPEGs in one click",    visual: "arrow"    },
-  { phrase: "Find the cuts",       sub: "AI marks every silence, filler, and slow section", visual: "waveform" },
-  { phrase: "Write captions",      sub: "SRT file ready to drop in any editor",             visual: "lines"    },
+  { phrase: "Pick best frames",  sub: "Every frame ranked by sharpness and expression",    visual: "grid"     },
+  { phrase: "Score every frame", sub: "Sharpness, faces, and composition — scored 0 to 100", visual: "waveform" },
+  { phrase: "Make stickers",     sub: "Turn any frame into a cartoon, 3D, or pixel sticker", visual: "lines"    },
+  { phrase: "Export as images",  sub: "Download your favorites as transparent PNG or JPEG",  visual: "arrow"    },
 ];
 
 const WAVE_HEIGHTS = [8,16,32,12,48,28,56,20,40,14,52,24,36,18,44,10,38,26,50,22,42,16,34,30,46,12];
@@ -168,15 +168,13 @@ export default function LandingPage({ onStart }: Props) {
 
         <section className="va-section va-reveal" id="features" aria-labelledby="va-feat-heading">
           <div className="va-section-label" aria-hidden="true">What it does</div>
-          <h2 id="va-feat-heading" className="va-section-hed">Six tools.<br />One upload.</h2>
+          <h2 id="va-feat-heading" className="va-section-hed">Four tools.<br />One upload.</h2>
           <div className="va-feat-grid" role="list">
             {[
-              { num: "01", title: "Best frame picker",   desc: "AI ranks every frame for sharpness and expression. Browse, select, and download as JPEG in seconds." },
-              { num: "02", title: "Sticker generator",   desc: "Turn any frame into a die-cut sticker — cartoon, 3D, pixel art, or oil paint — exported as transparent PNG or WebP." },
-              { num: "03", title: "Image export",        desc: "Preview any frame full-size, pick your favorites, and download them all — ready for thumbnails, posts, and profiles." },
-              { num: "04", title: "AI scene analysis",   desc: "Gemini 2.5 Flash reads every frame. Segments labeled with pacing, silence, and cut recommendations." },
-              { num: "05", title: "Trim & export",       desc: "Mark segments to remove. One click exports a clean MP4 — no timeline, no editor required." },
-              { num: "06", title: "Caption export",      desc: "Auto-generated .srt subtitle file, ready to drop into any editor or upload platform." },
+              { num: "01", title: "Best frame picker",  desc: "AI groups your video into scenes and pulls the sharpest, most expressive frame from each. Browse, select, and download in seconds." },
+              { num: "02", title: "Frame scoring",      desc: "Every candidate frame is scored 0–100 on sharpness, faces, and composition — so the best shot rises to the top automatically." },
+              { num: "03", title: "Sticker generator",  desc: "Turn any frame into a die-cut sticker — cartoon, 3D, pixel art, or oil paint — exported as a transparent PNG or WebP." },
+              { num: "04", title: "Image export",       desc: "Preview any frame full-size, pick your favorites, and download them all — ready for thumbnails, posts, and profiles." },
             ].map(f => (
               <div className="va-feat va-reveal" key={f.num} role="listitem">
                 <span className="va-feat-num" aria-hidden="true">{f.num}</span>
@@ -219,8 +217,8 @@ export default function LandingPage({ onStart }: Props) {
             <li className="va-step va-reveal" style={{ transitionDelay: "80ms" }}>
               <span className="va-step-num" aria-hidden="true">02</span>
               <div className="va-step-body">
-                <h3>Analyze</h3>
-                <p>Gemini 2.5 Flash scores every frame for sharpness, expression, and composition — and maps segments, pacing, and highlights.</p>
+                <h3>Score</h3>
+                <p>Gemini 2.5 Flash groups the video into scenes and scores every frame for sharpness, faces, and composition.</p>
                 <span className="va-step-time">~30 sec</span>
               </div>
             </li>
@@ -228,7 +226,7 @@ export default function LandingPage({ onStart }: Props) {
               <span className="va-step-num" aria-hidden="true">03</span>
               <div className="va-step-body">
                 <h3>Export</h3>
-                <p>Best frames as JPEGs — plus a trimmed MP4 or .srt captions if you want them.</p>
+                <p>Download your best frames as images, or turn any one into a transparent sticker.</p>
                 <span className="va-step-time">~5 sec</span>
               </div>
             </li>
