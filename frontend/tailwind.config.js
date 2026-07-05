@@ -7,12 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        "k-bg": "#050505",
-        "k-panel": "#0d0d0d",
-        "k-card": "#141414",
+        // Frame Noir brand tokens
+        ink: "#0B0B0D",
+        ash: "#151519",
+        bone: "#EDE8DF",
+        ember: "#D9873F",
+        // legacy aliases
+        "k-bg": "#0B0B0D",
+        "k-panel": "#151519",
+        "k-card": "#151519",
       },
       transitionTimingFunction: {
         "k-ease": "cubic-bezier(0.22, 1, 0.36, 1)",
+      },
+      letterSpacing: {
+        brand: "0.3em",
       },
     },
   },
