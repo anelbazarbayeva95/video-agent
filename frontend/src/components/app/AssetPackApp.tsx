@@ -6,6 +6,7 @@ import { buildAssetPack } from "../../api";
 import type { BestFrame, PackAsset, AssetPackEvent } from "../../api";
 import ProcessingTimeline, { type Step } from "./ProcessingTimeline";
 import AssetPackGrid from "./AssetPackGrid";
+import { KadrWordmark } from "../Brand";
 import "./assetpack.css";
 
 const STAGES = [
@@ -106,20 +107,16 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   }
 
   return (
-    <div className="kadr-app min-h-screen bg-[#050505] text-white">
+    <div className="kadr-app min-h-screen bg-ink text-bone">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-[#050505]/80 px-6 py-4 backdrop-blur">
-        <button onClick={onBack} className="flex items-center gap-2 bg-transparent text-white" aria-label="Back to home">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="1" y="1" width="22" height="22" rx="3" stroke="#c4b5fd" strokeWidth="1.5" />
-            <rect x="14" y="14" width="5" height="5" fill="#c4b5fd" />
-          </svg>
-          <span className="text-sm font-semibold tracking-tight">Kadr</span>
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-bone/10 bg-ink/85 px-6 py-4 backdrop-blur">
+        <button onClick={onBack} className="bg-transparent" aria-label="Back to home">
+          <KadrWordmark size={18} />
         </button>
         {file && (
           <button
             onClick={reset}
-            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-transparent px-3 py-1.5 text-xs text-white/70 transition hover:border-white/25 hover:text-white"
+            className="flex items-center gap-1.5 rounded-full border border-bone/15 bg-transparent px-3 py-1.5 text-xs text-bone/70 transition hover:border-bone/35 hover:text-bone"
           >
             <RotateCcw size={12} /> New video
           </button>
@@ -135,18 +132,18 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
             initial={{ opacity: 0, y: reduce ? 0 : 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="group mx-auto mt-10 flex min-h-[340px] w-full max-w-2xl flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/15 bg-white/[0.02] px-8 text-center text-white transition hover:border-white/30 hover:bg-white/[0.04]"
+            className="group mx-auto mt-10 flex min-h-[340px] w-full max-w-2xl flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-bone/15 bg-bone/[0.02] px-8 text-center text-bone transition hover:border-bone/30 hover:bg-bone/[0.04]"
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/70 transition group-hover:scale-105">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-bone/10 bg-bone/[0.04] text-ember transition group-hover:scale-105">
               <Upload size={24} />
             </div>
             <div>
               <p className="text-lg font-medium">Drop a video to create an asset pack</p>
-              <p className="mt-1 text-sm text-white/65">
+              <p className="mt-1 text-sm text-bone/65">
                 Kadr finds the best frames and turns them into social-ready visuals.
               </p>
             </div>
-            <span className="mt-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition group-hover:bg-white/90">
+            <span className="mt-2 rounded-full bg-bone px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-white">
               Choose Video
             </span>
             <input
@@ -165,11 +162,11 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                   <video
                     src={videoUrl}
                     controls
-                    className="w-full rounded-2xl border border-white/10 bg-black"
+                    className="w-full rounded-2xl border border-bone/10 bg-black"
                   />
                 )}
-                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-                  <p className="mb-3 text-xs uppercase tracking-[0.18em] text-white/60" aria-live="polite">
+                <div className="rounded-2xl border border-bone/10 bg-ash p-4">
+                  <p className="mb-3 text-xs uppercase tracking-[0.18em] text-bone/60" aria-live="polite">
                     {done ? "Asset pack ready" : "Generating"}
                   </p>
                   <ProcessingTimeline steps={steps} />
@@ -194,15 +191,15 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="sticky bottom-0 z-30 border-t border-white/[0.08] bg-[#050505]/90 px-6 py-4 backdrop-blur"
+          className="sticky bottom-0 z-30 border-t border-bone/10 bg-ink/90 px-6 py-4 backdrop-blur"
         >
           <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <span className="text-sm text-white/60">
+            <span className="text-sm text-bone/60">
               {frames.length} frames · {assets.filter((a) => a.kind === "sticker").length} stickers · thumbnail · story
             </span>
             <button
               onClick={exportPack}
-              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:bg-white/90"
+              className="flex items-center gap-2 rounded-full bg-bone px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-white"
             >
               <Download size={15} /> Export pack (.zip)
             </button>
@@ -211,7 +208,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
       )}
 
       {running && !done && (
-        <div className="pointer-events-none fixed bottom-6 right-6 flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-xs text-white/70 backdrop-blur">
+        <div className="pointer-events-none fixed bottom-6 right-6 flex items-center gap-2 rounded-full border border-bone/10 bg-ink/85 px-4 py-2 text-xs text-bone/70 backdrop-blur">
           <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}>
             <Loader size={13} />
           </motion.span>

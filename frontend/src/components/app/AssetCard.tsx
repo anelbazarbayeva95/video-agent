@@ -74,7 +74,7 @@ export default function AssetCard({
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <span className="truncate text-xs font-medium text-white/80">{label}</span>
         <div className="flex shrink-0 items-center gap-2">
-          {sublabel && <span className="text-[11px] tabular-nums text-white/60">{sublabel}</span>}
+          {sublabel && <span className="font-mono text-[11px] tabular-nums text-white/60">{sublabel}</span>}
           {status === "ready" && imageUrl && onDownload && (
             <button
               onClick={onDownload}

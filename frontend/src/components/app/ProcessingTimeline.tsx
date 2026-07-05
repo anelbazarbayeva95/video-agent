@@ -17,7 +17,7 @@ export default function ProcessingTimeline({ steps }: { steps: Step[] }) {
               s.state === "complete"
                 ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
                 : s.state === "active"
-                ? "border-white/30 bg-white/10 text-white"
+                ? "border-ember/50 bg-ember/15 text-ember"
                 : "border-white/15 text-white/55"
             }`}
           >
