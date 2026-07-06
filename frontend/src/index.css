@@ -20,8 +20,8 @@
 
 body {
   margin: 0;
-  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
-  background: #f7f6f2;
+  font-family: "Geist", system-ui, sans-serif;
+  background: #0B0B0D;
   color: var(--text-1);
   -webkit-font-smoothing: antialiased;
 }

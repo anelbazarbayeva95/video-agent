@@ -23,6 +23,10 @@ export default {
       letterSpacing: {
         brand: "0.3em",
       },
+      fontFamily: {
+        sans: ["Geist", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+      },
     },
   },
   plugins: [],
