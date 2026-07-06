@@ -162,7 +162,7 @@ export default function NoirLanding({ onStart }: Props) {
 
       <main>
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 pb-20 pt-10 lg:grid-cols-2 lg:pt-16">
+        <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 pb-24 pt-12 lg:grid-cols-2 lg:pt-20">
           <motion.div
             initial={{ opacity: 0, y: reduce ? 0 : 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -171,10 +171,10 @@ export default function NoirLanding({ onStart }: Props) {
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">
               AI image toolkit
             </p>
-            <h1 className="max-w-[14ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-6xl" style={{ textWrap: "balance" }}>
+            <h1 className="max-w-[14ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl" style={{ textWrap: "balance" }}>
               Every frame, an&nbsp;asset<span className="text-ember">.</span>
             </h1>
-            <p className="mt-6 max-w-[46ch] text-lg leading-relaxed text-bone/70">
+            <p className="mt-7 max-w-[46ch] text-lg leading-relaxed text-bone/70 md:text-xl">
               Upload one video. Kadr pulls its best frames and turns them into
               stickers, a thumbnail, and a story cut — a complete asset pack, ready to post.
             </p>
@@ -194,9 +194,9 @@ export default function NoirLanding({ onStart }: Props) {
         <div className="mx-auto max-w-6xl border-t border-bone/10 px-6" role="separator" />
 
         {/* How it works */}
-        <section className="mx-auto max-w-6xl px-6 py-20" aria-labelledby="how-heading">
+        <section className="mx-auto max-w-6xl px-6 py-24" aria-labelledby="how-heading">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">How it works</p>
-          <h2 id="how-heading" className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 id="how-heading" className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">
             Three steps. Under a minute.
           </h2>
           <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -225,15 +225,15 @@ export default function NoirLanding({ onStart }: Props) {
         <div className="mx-auto max-w-6xl border-t border-bone/10 px-6" role="separator" />
 
         {/* The pack */}
-        <section className="mx-auto max-w-6xl px-6 py-20" aria-labelledby="pack-heading">
+        <section className="mx-auto max-w-6xl px-6 py-24" aria-labelledby="pack-heading">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">The asset pack</p>
-          <h2 id="pack-heading" className="mt-4 max-w-[22ch] text-3xl font-bold tracking-tight md:text-4xl">
+          <h2 id="pack-heading" className="mt-4 max-w-[22ch] text-4xl font-bold tracking-tight md:text-5xl">
             One clip in. Ten assets out.
           </h2>
           <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-bone/10 bg-bone/10 md:grid-cols-4">
             {ASSETS.map((a) => (
               <div key={a.label} className="bg-ash p-6">
-                <span className="font-mono text-3xl font-bold text-ember">{a.n}</span>
+                <span className="font-mono text-4xl font-bold text-ember">{a.n}</span>
                 <p className="mt-3 text-sm font-semibold">{a.label}</p>
                 <p className="mt-1 text-xs text-bone/60">{a.sub}</p>
               </div>
@@ -242,8 +242,8 @@ export default function NoirLanding({ onStart }: Props) {
         </section>
 
         {/* CTA */}
-        <section className="mx-auto max-w-6xl px-6 pb-24 pt-4 text-center">
-          <h2 className="mx-auto max-w-[18ch] text-3xl font-bold tracking-tight md:text-4xl" style={{ textWrap: "balance" }}>
+        <section className="mx-auto max-w-6xl px-6 pb-28 pt-8 text-center">
+          <h2 className="mx-auto max-w-[18ch] text-4xl font-bold tracking-tight md:text-5xl" style={{ textWrap: "balance" }}>
             Your best frames are already in the footage.
           </h2>
           <button
