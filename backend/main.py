@@ -76,6 +76,9 @@ async def asset_pack(
     prompt: str = Form(None),
     count: int = Form(5),
     sticker_style: str = Form("cutout"),
+    stickers: int = Form(3),
+    thumbnails: int = Form(1),
+    stories: int = Form(1),
 ):
     ext = file.filename.rsplit(".", 1)[-1].lower()
     if ext not in ("mp4", "mov", "avi", "webm", "mkv"):
@@ -86,7 +89,10 @@ async def asset_pack(
     contents = await file.read()
 
     async def stream():
-        async for event in build_asset_pack(contents, ext, prompt, count, sticker_style):
+        async for event in build_asset_pack(
+            contents, ext, prompt, count, sticker_style,
+            stickers=stickers, thumbnails=thumbnails, stories=stories,
+        ):
             yield f"data: {json.dumps(event)}\n\n"
         yield "data: [DONE]\n\n"
 

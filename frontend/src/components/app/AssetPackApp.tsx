@@ -33,6 +33,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   const [stage, setStage] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [opts, setOpts] = useState({ count: 5, stickers: 3, thumbnails: 1, stories: 1 });
   const fileInput = useRef<HTMLInputElement>(null);
 
   const steps: Step[] = useMemo(() => {
@@ -66,13 +67,13 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
         else if (e.type === "asset") setAssets((prev) => [...prev, e.asset]);
         else if (e.type === "asset_error") console.warn("asset error", e);
         else if (e.type === "error") setError(e.message);
-      });
+      }, opts);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setRunning(false);
     }
-  }, []);
+  }, [opts]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -92,11 +93,11 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   async function exportPack() {
     const zip = new JSZip();
     frames.forEach((f, i) => zip.file(`best-frames/frame_${i + 1}.jpg`, b64ToBytes(f.image_b64)));
-    let sc = 0;
+    let sc = 0, tc = 0, stc = 0;
     assets.forEach((a) => {
       if (a.kind === "sticker") zip.file(`stickers/sticker_${++sc}.png`, b64ToBytes(a.image_b64));
-      else if (a.kind === "thumbnail") zip.file(`thumbnail_16x9.jpg`, b64ToBytes(a.image_b64));
-      else if (a.kind === "story") zip.file(`story_9x16.jpg`, b64ToBytes(a.image_b64));
+      else if (a.kind === "thumbnail") zip.file(`thumbnails/thumbnail_16x9_${++tc}.jpg`, b64ToBytes(a.image_b64));
+      else if (a.kind === "story") zip.file(`stories/story_9x16_${++stc}.jpg`, b64ToBytes(a.image_b64));
     });
     const blob = await zip.generateAsync({ type: "blob" });
     const a = document.createElement("a");
@@ -125,35 +126,65 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
 
       <main className="mx-auto max-w-6xl px-6 py-10">
         {!file ? (
-          <motion.button
-            onClick={() => fileInput.current?.click()}
-            onDrop={onDrop}
-            onDragOver={(e) => e.preventDefault()}
-            initial={{ opacity: 0, y: reduce ? 0 : 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="group mx-auto mt-10 flex min-h-[340px] w-full max-w-2xl flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-bone/15 bg-bone/[0.02] px-8 text-center text-bone transition hover:border-bone/30 hover:bg-bone/[0.04]"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-bone/10 bg-bone/[0.04] text-ember transition group-hover:scale-105">
-              <Upload size={24} />
+          <div className="mx-auto mt-10 w-full max-w-2xl">
+            <motion.button
+              onClick={() => fileInput.current?.click()}
+              onDrop={onDrop}
+              onDragOver={(e) => e.preventDefault()}
+              initial={{ opacity: 0, y: reduce ? 0 : 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="group flex min-h-[300px] w-full flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-bone/15 bg-bone/[0.02] px-8 text-center text-bone transition hover:border-bone/30 hover:bg-bone/[0.04]"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-bone/10 bg-bone/[0.04] text-ember transition group-hover:scale-105">
+                <Upload size={24} />
+              </div>
+              <div>
+                <p className="text-lg font-medium">Drop a video to create an asset pack</p>
+                <p className="mt-1 text-sm text-bone/65">
+                  Kadr finds the best frames and turns them into social-ready visuals.
+                </p>
+              </div>
+              <span className="mt-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-[#E39A55]">
+                Choose Video
+              </span>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="video/*"
+                hidden
+                onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
+              />
+            </motion.button>
+
+            {/* Pack contents */}
+            <div className="mt-4 rounded-2xl border border-bone/10 bg-ash px-5 py-4">
+              <p className="mb-3 text-xs uppercase tracking-[0.18em] text-bone/60">Pack contents</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {(
+                  [
+                    ["count", "Best frames"],
+                    ["stickers", "Stickers"],
+                    ["thumbnails", "Thumbnails"],
+                    ["stories", "Stories"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="flex flex-col gap-1.5 text-xs text-bone/70">
+                    {label}
+                    <select
+                      value={opts[key]}
+                      onChange={(e) => setOpts((o) => ({ ...o, [key]: Number(e.target.value) }))}
+                      className="rounded-lg border border-bone/15 bg-ink px-2.5 py-2 text-sm text-bone"
+                    >
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
             </div>
-            <div>
-              <p className="text-lg font-medium">Drop a video to create an asset pack</p>
-              <p className="mt-1 text-sm text-bone/65">
-                Kadr finds the best frames and turns them into social-ready visuals.
-              </p>
-            </div>
-            <span className="mt-2 rounded-full bg-bone px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-white">
-              Choose Video
-            </span>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="video/*"
-              hidden
-              onChange={(e) => e.target.files?.[0] && start(e.target.files[0])}
-            />
-          </motion.button>
+          </div>
         ) : (
           <div>
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
@@ -199,7 +230,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
             </span>
             <button
               onClick={exportPack}
-              className="flex items-center gap-2 rounded-full bg-bone px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-white"
+              className="flex items-center gap-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
             >
               <Download size={15} /> Export pack (.zip)
             </button>

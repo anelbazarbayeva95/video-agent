@@ -77,7 +77,7 @@ export default function AssetLightbox({
           </div>
           <button
             onClick={download}
-            className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-white/90"
+            className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
           >
             <Download size={14} /> Download
           </button>
