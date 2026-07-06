@@ -11,9 +11,7 @@ import "./assetpack.css";
 
 const STAGES = [
   { key: "analyzing", label: "Detecting scenes & best frames" },
-  { key: "thumbnail", label: "Creating thumbnail" },
-  { key: "story", label: "Creating story" },
-  { key: "sticker", label: "Making stickers" },
+  { key: "generating", label: "Generating assets" },
   { key: "done", label: "Pack ready" },
 ];
 
@@ -31,6 +29,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   const [frames, setFrames] = useState<BestFrame[]>([]);
   const [assets, setAssets] = useState<PackAsset[]>([]);
   const [stage, setStage] = useState<string | null>(null);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [opts, setOpts] = useState({ count: 5, stickers: 3, thumbnails: 1, stories: 1 });
@@ -62,7 +61,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
     setRunning(true);
     try {
       await buildAssetPack(f, (e: AssetPackEvent) => {
-        if (e.type === "status") setStage(e.stage);
+        if (e.type === "status") { setStage(e.stage); setStatusMsg(e.message); }
         else if (e.type === "frames") setFrames(e.frames);
         else if (e.type === "asset") setAssets((prev) => [...prev, e.asset]);
         else if (e.type === "asset_error") console.warn("asset error", e);
@@ -87,6 +86,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
     setFrames([]);
     setAssets([]);
     setStage(null);
+    setStatusMsg(null);
     setError(null);
   }
 
@@ -201,6 +201,9 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                     {done ? "Asset pack ready" : "Generating"}
                   </p>
                   <ProcessingTimeline steps={steps} />
+                  {!done && statusMsg && (
+                    <p className="mt-3 font-mono text-[11px] text-bone/60">{statusMsg}</p>
+                  )}
                 </div>
               </div>
 
