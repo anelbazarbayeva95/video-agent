@@ -154,7 +154,7 @@ export default function NoirLanding({ onStart }: Props) {
         <KadrWordmark />
         <button
           onClick={onStart}
-          className="rounded-full bg-bone px-5 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+          className="rounded-full bg-ember px-5 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
         >
           Get started
         </button>
@@ -181,7 +181,7 @@ export default function NoirLanding({ onStart }: Props) {
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <button
                 onClick={onStart}
-                className="flex items-center gap-2 rounded-full bg-bone px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-white"
+                className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
               >
                 Upload a video <ArrowRight size={15} />
               </button>
@@ -248,7 +248,7 @@ export default function NoirLanding({ onStart }: Props) {
           </h2>
           <button
             onClick={onStart}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-bone px-8 py-4 text-sm font-semibold text-ink transition hover:bg-white"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-4 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
           >
             Try Kadr free <ArrowRight size={15} />
           </button>

@@ -41,8 +41,8 @@ function Section({
 export default function AssetPackGrid({ frames, assets, framesLoading }: Props) {
   const [preview, setPreview] = useState<PreviewItem | null>(null);
   const stickers = assets.filter((a) => a.kind === "sticker");
-  const thumbnail = assets.find((a) => a.kind === "thumbnail");
-  const story = assets.find((a) => a.kind === "story");
+  const thumbnails = assets.filter((a) => a.kind === "thumbnail");
+  const stories = assets.filter((a) => a.kind === "story");
 
   return (
     <div className="space-y-10">
@@ -101,43 +101,64 @@ export default function AssetPackGrid({ frames, assets, framesLoading }: Props) 
         </div>
       </Section>
 
-      {/* Formats: thumbnail + story, balanced side by side */}
+      {/* Formats: thumbnails + stories, balanced side by side */}
       <Section title="Formats">
         <div className="flex flex-wrap items-start gap-6">
-          <div className="w-full max-w-[440px]">
-            <p className="mb-2 text-[11px] text-white/55">16:9 Thumbnail</p>
-            {thumbnail ? (
-              <AssetCard
-                label="16:9 Thumbnail"
-                imageUrl={`data:${thumbnail.mime};base64,${thumbnail.image_b64}`}
-                status="ready"
-                aspect="16 / 9"
-                onOpen={() =>
-                  setPreview({ url: `data:${thumbnail.mime};base64,${thumbnail.image_b64}`, label: "16:9 Thumbnail", downloadName: "thumbnail_16x9.jpg" })
-                }
-                onDownload={() => download(`data:${thumbnail.mime};base64,${thumbnail.image_b64}`, "thumbnail_16x9.jpg")}
-              />
+          <div className="flex min-w-0 flex-1 basis-[440px] flex-col gap-3">
+            <p className="text-[11px] text-white/55">16:9 Thumbnail</p>
+            {thumbnails.length === 0 ? (
+              <div className="max-w-[440px]">
+                <AssetCard label="16:9 Thumbnail" status="generating" aspect="16 / 9" />
+              </div>
             ) : (
-              <AssetCard label="16:9 Thumbnail" status="generating" aspect="16 / 9" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {thumbnails.map((t, i) => {
+                  const url = `data:${t.mime};base64,${t.image_b64}`;
+                  const name = `thumbnail_16x9_${i + 1}.jpg`;
+                  return (
+                    <AssetCard
+                      key={i}
+                      label={`16:9 Thumbnail${thumbnails.length > 1 ? ` ${i + 1}` : ""}`}
+                      sublabel={ts(t.timestamp)}
+                      imageUrl={url}
+                      status="ready"
+                      aspect="16 / 9"
+                      onOpen={() => setPreview({ url, label: "16:9 Thumbnail", sublabel: ts(t.timestamp), downloadName: name })}
+                      onDownload={() => download(url, name)}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
 
-          <div className="w-[168px]">
-            <p className="mb-2 text-[11px] text-white/55">9:16 Story</p>
-            {story ? (
-              <AssetCard
-                label="9:16 Story"
-                imageUrl={`data:${story.mime};base64,${story.image_b64}`}
-                status="ready"
-                aspect="9 / 16"
-                onOpen={() =>
-                  setPreview({ url: `data:${story.mime};base64,${story.image_b64}`, label: "9:16 Story", downloadName: "story_9x16.jpg" })
-                }
-                onDownload={() => download(`data:${story.mime};base64,${story.image_b64}`, "story_9x16.jpg")}
-              />
-            ) : (
-              <AssetCard label="9:16 Story" status="generating" aspect="9 / 16" />
-            )}
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] text-white/55">9:16 Story</p>
+            <div className="flex flex-wrap gap-3">
+              {stories.length === 0 ? (
+                <div className="w-[168px]">
+                  <AssetCard label="9:16 Story" status="generating" aspect="9 / 16" />
+                </div>
+              ) : (
+                stories.map((s, i) => {
+                  const url = `data:${s.mime};base64,${s.image_b64}`;
+                  const name = `story_9x16_${i + 1}.jpg`;
+                  return (
+                    <div key={i} className="w-[168px]">
+                      <AssetCard
+                        label={`9:16 Story${stories.length > 1 ? ` ${i + 1}` : ""}`}
+                        sublabel={ts(s.timestamp)}
+                        imageUrl={url}
+                        status="ready"
+                        aspect="9 / 16"
+                        onOpen={() => setPreview({ url, label: "9:16 Story", sublabel: ts(s.timestamp), downloadName: name })}
+                        onDownload={() => download(url, name)}
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       </Section>

@@ -68,6 +68,9 @@ export interface AssetPackOptions {
   prompt?: string;
   count?: number;
   stickerStyle?: string;
+  stickers?: number;
+  thumbnails?: number;
+  stories?: number;
 }
 
 export async function buildAssetPack(
@@ -80,6 +83,9 @@ export async function buildAssetPack(
   if (opts.prompt) form.append("prompt", opts.prompt);
   if (opts.count != null) form.append("count", String(opts.count));
   if (opts.stickerStyle) form.append("sticker_style", opts.stickerStyle);
+  if (opts.stickers != null) form.append("stickers", String(opts.stickers));
+  if (opts.thumbnails != null) form.append("thumbnails", String(opts.thumbnails));
+  if (opts.stories != null) form.append("stories", String(opts.stories));
 
   const res = await fetch(`${API}/asset-pack`, { method: "POST", body: form });
   if (!res.ok) {

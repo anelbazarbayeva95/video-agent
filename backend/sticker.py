@@ -47,7 +47,7 @@ every pixel not covered by the subject. No white outline, no shadow, no gradient
 just the subject on flat magenta."""
 
 # White die-cut outline thickness, as a fraction of the subject's longer side.
-OUTLINE_FRAC = 0.04
+OUTLINE_FRAC = 0.022
 
 
 def _key_out_background(png_bytes: bytes) -> Image.Image:
