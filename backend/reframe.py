@@ -70,7 +70,13 @@ def _crop_window(w: int, h: int, ratio: float, center):
     return (x0, y0, x0 + crop_w, y0 + crop_h)
 
 
-def smart_crop(image_bytes: bytes, aspect: str) -> bytes:
+def detect_box(image_bytes: bytes):
+    """Detect the subject bounding box once, for reuse across aspects."""
+    img = Image.open(io.BytesIO(image_bytes))
+    return _subject_box(image_bytes, img.width, img.height)
+
+
+def smart_crop(image_bytes: bytes, aspect: str, box="auto") -> bytes:
     """Crop an image to `aspect`, keeping the subject centered. Never upscales
     or expands the canvas (generative expansion is a future enhancement)."""
     if aspect not in ASPECTS:
@@ -80,7 +86,10 @@ def smart_crop(image_bytes: bytes, aspect: str) -> bytes:
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     w, h = img.size
 
-    box = _subject_box(image_bytes, w, h)
+    # `box="auto"` detects the subject; a caller that crops the same frame to
+    # several aspects can detect once via detect_box() and pass it (or None).
+    if box == "auto":
+        box = _subject_box(image_bytes, w, h)
     if box:
         cx = (box[0] + box[2]) / 2
         cy = (box[1] + box[3]) / 2

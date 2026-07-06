@@ -3,13 +3,17 @@ import base64
 
 from frames import extract_best_frames
 from sticker import generate_sticker
-from reframe import smart_crop
+from reframe import smart_crop, detect_box
 
 # Asset Pack composition (defaults per the frontend spec): 5 best frames,
 # 3 stickers, 1 thumbnail (16:9), 1 story (9:16). Every count is caller-
-# configurable from 1-5; variations are cut from different top frames.
-# Assets stream as they become ready so the UI reveals them incrementally.
+# configurable from 1-5. Generation is CONCURRENT (bounded by a semaphore)
+# and results stream in completion order, so a 4/4/4 pack takes a few
+# generation rounds instead of ~20 sequential model calls. The subject box
+# is detected once per source frame and shared by that frame's thumbnail
+# and story crops.
 MAX_VARIATIONS = 5
+MAX_CONCURRENCY = 3  # stay under Gemini rate limits
 
 
 def _b64(data: bytes) -> str:
@@ -42,55 +46,62 @@ async def build_asset_pack(video_bytes, ext, prompt=None, count=5,
     # Best frames arrive first so the Moment Map can render immediately.
     yield {"type": "frames", "frames": frames}
 
-    def frame_bytes(i):
-        # variation i comes from the i-th best frame, wrapping if fewer frames
-        fr = frames[i % len(frames)]
-        return base64.b64decode(fr["image_b64"]), fr
+    total = thumbnails + stories + stickers
+    yield {"type": "status", "stage": "generating",
+           "message": f"Generating {total} assets…"}
 
-    # Thumbnails (16:9)
-    for i in range(thumbnails):
-        yield {"type": "status", "stage": "thumbnail",
-               "message": f"Creating 16:9 thumbnail {i + 1}/{thumbnails}…"}
-        data, fr = frame_bytes(i)
-        try:
-            thumb = await asyncio.to_thread(smart_crop, data, "16:9")
-            yield {"type": "asset", "asset": {
-                "kind": "thumbnail", "aspect": "16:9",
-                "image_b64": _b64(thumb), "mime": "image/jpeg",
-                "timestamp": fr["timestamp"],
-            }}
-        except Exception as e:
-            yield {"type": "asset_error", "kind": "thumbnail", "message": str(e)}
+    sem = asyncio.Semaphore(MAX_CONCURRENCY)
+    frame_data = [base64.b64decode(f["image_b64"]) for f in frames]
 
-    # Stories (9:16)
-    for i in range(stories):
-        yield {"type": "status", "stage": "story",
-               "message": f"Creating 9:16 story {i + 1}/{stories}…"}
-        data, fr = frame_bytes(i)
-        try:
-            story = await asyncio.to_thread(smart_crop, data, "9:16")
-            yield {"type": "asset", "asset": {
-                "kind": "story", "aspect": "9:16",
-                "image_b64": _b64(story), "mime": "image/jpeg",
-                "timestamp": fr["timestamp"],
-            }}
-        except Exception as e:
-            yield {"type": "asset_error", "kind": "story", "message": str(e)}
+    # Detect each needed frame's subject box once; thumbnail + story reuse it.
+    crop_indices = {i % len(frames) for i in range(max(thumbnails, stories))}
+    boxes = {}
 
-    # Stickers from the top frames
-    for i in range(stickers):
-        yield {"type": "status", "stage": "sticker",
-               "message": f"Removing background {i + 1}/{stickers}…"}
-        data, fr = frame_bytes(i)
+    async def find_box(idx):
+        async with sem:
+            try:
+                boxes[idx] = await asyncio.to_thread(detect_box, frame_data[idx])
+            except Exception:
+                boxes[idx] = None
+
+    await asyncio.gather(*(find_box(i) for i in crop_indices))
+
+    async def make(kind, i):
+        idx = i % len(frames)
+        fr = frames[idx]
         try:
-            png = await asyncio.to_thread(generate_sticker, data, sticker_style, "png")
-            yield {"type": "asset", "asset": {
-                "kind": "sticker",
-                "image_b64": _b64(png), "mime": "image/png",
-                "timestamp": fr["timestamp"], "label": fr.get("label"),
-            }}
+            async with sem:
+                if kind == "sticker":
+                    out = await asyncio.to_thread(
+                        generate_sticker, frame_data[idx], sticker_style, "png")
+                    asset = {"kind": "sticker", "image_b64": _b64(out),
+                             "mime": "image/png", "timestamp": fr["timestamp"],
+                             "label": fr.get("label")}
+                else:
+                    aspect = "16:9" if kind == "thumbnail" else "9:16"
+                    out = await asyncio.to_thread(
+                        smart_crop, frame_data[idx], aspect, boxes.get(idx))
+                    asset = {"kind": kind, "aspect": aspect,
+                             "image_b64": _b64(out), "mime": "image/jpeg",
+                             "timestamp": fr["timestamp"]}
+            return {"type": "asset", "asset": asset}
         except Exception as e:
-            yield {"type": "asset_error", "kind": "sticker", "message": str(e)}
+            return {"type": "asset_error", "kind": kind, "message": str(e)}
+
+    tasks = (
+        [asyncio.create_task(make("thumbnail", i)) for i in range(thumbnails)]
+        + [asyncio.create_task(make("story", i)) for i in range(stories)]
+        + [asyncio.create_task(make("sticker", i)) for i in range(stickers)]
+    )
+
+    done_count = 0
+    for fut in asyncio.as_completed(tasks):
+        event = await fut
+        yield event
+        done_count += 1
+        if done_count < total:
+            yield {"type": "status", "stage": "generating",
+                   "message": f"Generating assets… {done_count}/{total} ready"}
 
     yield {"type": "status", "stage": "done", "message": "Asset pack ready"}
     yield {"type": "done"}
