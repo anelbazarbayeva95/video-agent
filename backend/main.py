@@ -9,6 +9,7 @@ from frames import extract_best_frames
 from sticker import generate_sticker, STYLES
 from reframe import smart_crop, ASPECTS
 from asset_pack import build_asset_pack
+from expand import expand as expand_image, ASPECTS as EXPAND_ASPECTS
 
 load_dotenv()
 
@@ -97,6 +98,21 @@ async def asset_pack(
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream")
+
+
+@app.post("/expand")
+async def expand(file: UploadFile = File(...), aspect: str = Form("16:9")):
+    if aspect not in EXPAND_ASPECTS:
+        raise HTTPException(400, f"Unknown aspect. Options: {', '.join(EXPAND_ASPECTS)}")
+    contents = await file.read()
+    try:
+        image = expand_image(contents, aspect)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+    return Response(
+        content=image, media_type="image/jpeg",
+        headers={"Content-Disposition": 'attachment; filename="expanded.jpg"'},
+    )
 
 
 @app.post("/reframe")
