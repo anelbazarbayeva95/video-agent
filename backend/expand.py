@@ -18,18 +18,45 @@ ASPECTS = {
     "4:5": (4 / 5, 1280),
 }
 
-EXPAND_PROMPT = """This image has a sharp real photo in the center and a blurred \
-placeholder filling the border area. Regenerate ONLY the blurred border so the \
-scene continues naturally outward from the center — same setting, subject, style, \
-lighting, and perspective, as if the camera had captured a wider view. Keep the \
-sharp central region exactly as it is. Output the full image at the same dimensions."""
+EXPAND_PROMPT = """Outpaint this image to fill the whole frame. The center is a \
+real photo; the hazy/streaked areas around it are empty canvas you must replace \
+with newly generated content. Extend the scene outward so it looks like a single \
+wider photograph taken from the same spot — invent plausible surroundings that \
+match the lighting, shadows, colors, textures, perspective, and depth of field. \
+The generated areas must be fully detailed and photographic, never blurred or \
+streaked, and must blend into the center with no visible seam or brightness step. \
+Preserve the central subject exactly — same people, same faces and identity, same \
+pose, clothing, and expression; do not alter, duplicate, or move them. Output one \
+seamless photograph."""
 
 
 def _canvas_size(w, h, ratio):
-    """Smallest canvas of `ratio` that fully contains the original."""
-    if w / h < ratio:          # too tall -> add width
+    if w / h < ratio:
         return round(h * ratio), h
-    return w, round(w / ratio)  # too wide -> add height
+    return w, round(w / ratio)
+
+
+def _edge_smear(orig, cw, ch, ox, oy):
+    """Fill the expansion area by stretching the original's edge pixels outward,
+    giving the model real color/structure to continue instead of flat blur."""
+    w, h = orig.size
+    canvas = Image.new("RGB", (cw, ch))
+    # base: stretch whole image to cover, softly blurred so leftover streaks
+    # the model doesn't repaint read as haze, not hard smears
+    canvas.paste(orig.resize((cw, ch)).filter(ImageFilter.GaussianBlur(12)), (0, 0))
+    strip = max(2, min(w, h) // 50)
+    if ox > 0:  # left / right extensions
+        left = orig.crop((0, 0, strip, h)).resize((ox, h))
+        right = orig.crop((w - strip, 0, w, h)).resize((cw - ox - w, h))
+        canvas.paste(left, (0, oy))
+        canvas.paste(right, (ox + w, oy))
+    if oy > 0:  # top / bottom extensions
+        top = orig.crop((0, 0, w, strip)).resize((w, oy))
+        bot = orig.crop((0, h - strip, w, h)).resize((w, ch - oy - h))
+        canvas.paste(top, (ox, 0))
+        canvas.paste(bot, (ox, oy + h))
+    canvas.paste(orig, (ox, oy))
+    return canvas
 
 
 def expand(image_bytes: bytes, aspect: str) -> bytes:
@@ -41,17 +68,13 @@ def expand(image_bytes: bytes, aspect: str) -> bytes:
     w, h = orig.size
     cw, ch = _canvas_size(w, h, ratio)
     if (cw, ch) == (w, h):
-        # already the target ratio; nothing to expand
         return image_bytes
     ox, oy = (cw - w) // 2, (ch - h) // 2
 
-    # Blurred "cover" of the original as border context, sharp original on top.
-    bg = orig.resize((cw, ch)).filter(ImageFilter.GaussianBlur(28))
-    canvas = bg.copy()
-    canvas.paste(orig, (ox, oy))
-
+    canvas = _edge_smear(orig, cw, ch, ox, oy)
     buf = io.BytesIO()
     canvas.save(buf, format="JPEG", quality=92)
+
     resp = client.models.generate_content(
         model=IMAGE_MODEL,
         contents=[types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"),
@@ -65,21 +88,10 @@ def expand(image_bytes: bytes, aspect: str) -> bytes:
     if out is None:
         raise RuntimeError("Model returned no image")
 
+    # The model output is internally seamless; compositing the original back
+    # over it re-introduces a visible tone-step band, so we trust the model's
+    # frame (the prompt pins the central subject to stay unchanged).
     result = Image.open(io.BytesIO(out)).convert("RGB").resize((cw, ch))
-
-    # Hard-restore the real photo in the center with a feathered seam so the
-    # generated border blends but the original pixels are exact.
-    mask = Image.new("L", (cw, ch), 0)
-    feather = max(8, min(w, h) // 40)
-    inner = Image.new("L", (w, h), 255)
-    mask.paste(inner, (ox, oy))
-    mask = mask.filter(ImageFilter.GaussianBlur(feather))
-    # ensure the very center is fully original
-    core = Image.new("L", (w - 2 * feather, h - 2 * feather), 255)
-    mask.paste(core, (ox + feather, oy + feather))
-    full_orig = Image.new("RGB", (cw, ch))
-    full_orig.paste(orig, (ox, oy))
-    result = Image.composite(full_orig, result, mask)
 
     if max(cw, ch) > long_side:
         if cw >= ch:
