@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Download } from "lucide-react";
+import { X, Download, Sparkles, Loader } from "lucide-react";
+import { expandImage } from "../../api";
 
 export interface PreviewItem {
   url: string;
@@ -11,6 +12,12 @@ export interface PreviewItem {
   downloadName: string;
 }
 
+const EXPAND_ASPECTS = ["16:9", "9:16", "1:1"] as const;
+
+function b64Of(dataUrl: string) {
+  return dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+}
+
 export default function AssetLightbox({
   item,
   onClose,
@@ -18,6 +25,11 @@ export default function AssetLightbox({
   item: PreviewItem;
   onClose: () => void;
 }) {
+  const [shown, setShown] = useState(item.url);
+  const [expanding, setExpanding] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -26,9 +38,23 @@ export default function AssetLightbox({
 
   function download() {
     const a = document.createElement("a");
-    a.href = item.url;
-    a.download = item.downloadName;
+    a.href = shown;
+    a.download = expanded ? `expanded_${item.downloadName}` : item.downloadName;
     a.click();
+  }
+
+  async function doExpand(aspect: string) {
+    setExpanding(aspect);
+    setError(null);
+    try {
+      const b64 = await expandImage(b64Of(shown), aspect);
+      setShown(`data:image/jpeg;base64,${b64}`);
+      setExpanded(true);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setExpanding(null);
+    }
   }
 
   return (
@@ -57,15 +83,17 @@ export default function AssetLightbox({
           <X size={18} />
         </button>
 
-        <div className={`flex min-h-0 flex-1 items-center justify-center ${item.transparent ? "sticker-checker" : "bg-black"}`}>
-          <img
-            src={item.url}
-            alt={item.label}
-            className="max-h-[78vh] max-w-[92vw] object-contain"
-          />
+        <div className={`relative flex min-h-0 flex-1 items-center justify-center ${item.transparent ? "sticker-checker" : "bg-black"}`}>
+          <img src={shown} alt={item.label} className="max-h-[78vh] max-w-[92vw] object-contain" />
+          {expanding && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 text-sm text-white">
+              <Loader size={22} className="animate-spin" />
+              Expanding to {expanding}…
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-white/10 bg-[#0d0d0d] px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-[#0d0d0d] px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium text-white">{item.label}</span>
             {item.score != null && (
@@ -75,13 +103,36 @@ export default function AssetLightbox({
             )}
             {item.sublabel && <span className="text-white/55">{item.sublabel}</span>}
           </div>
-          <button
-            onClick={download}
-            className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
-          >
-            <Download size={14} /> Download
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Expand (outpaint) — not for transparent stickers */}
+            {!item.transparent && (
+              <div className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
+                  <Sparkles size={12} /> Expand
+                </span>
+                {EXPAND_ASPECTS.map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => doExpand(a)}
+                    disabled={!!expanding}
+                    className="rounded-full border border-white/15 bg-transparent px-2.5 py-1 text-[11px] font-medium text-white/80 transition hover:border-ember hover:text-white disabled:opacity-40"
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={download}
+              className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+            >
+              <Download size={14} /> Download
+            </button>
+          </div>
         </div>
+
+        {error && <p className="border-t border-white/10 bg-[#0d0d0d] px-4 py-2 text-xs text-red-300">{error}</p>}
       </motion.div>
     </motion.div>
   );

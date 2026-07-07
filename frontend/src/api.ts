@@ -132,6 +132,29 @@ export async function reframe(imageB64: string, aspect: Aspect): Promise<Blob> {
   return res.blob();
 }
 
+export async function expandImage(imageB64: string, aspect: string): Promise<string> {
+  const bin = atob(imageB64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+  const form = new FormData();
+  form.append("file", new Blob([bytes], { type: "image/jpeg" }), "frame.jpg");
+  form.append("aspect", aspect);
+
+  const res = await fetch(`${API}/expand`, { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Expand failed");
+  }
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve((r.result as string).split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
 export const STICKER_STYLES = [
   { id: "cutout", label: "Clean Cutout" },
   { id: "photo", label: "Photo" },
