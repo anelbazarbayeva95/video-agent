@@ -165,6 +165,41 @@ def _photo_sticker(image_bytes: bytes, fmt: str) -> bytes:
     return buf.getvalue()
 
 
+def _quality(img: Image.Image) -> tuple[float, float]:
+    """(transparent fraction, opaque fraction) of an RGBA sticker."""
+    alpha = list(img.getchannel("A").resize((64, 64)).getdata())
+    n = len(alpha)
+    transparent = sum(1 for a in alpha if a < 16) / n
+    opaque = sum(1 for a in alpha if a > 240) / n
+    return transparent, opaque
+
+
+def _is_clean_cutout(img: Image.Image) -> bool:
+    """A good cutout has real background (keyed to transparency) and a subject
+    that doesn't swallow the whole frame. A white blob / failed key is mostly
+    opaque with little transparency."""
+    transparent, opaque = _quality(img)
+    return transparent >= 0.15 and opaque <= 0.9
+
+
+def _gen_cutout(image_bytes: bytes, prompt: str) -> Image.Image:
+    response = client.models.generate_content(
+        model=IMAGE_MODEL,
+        contents=[
+            types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+            types.Part.from_text(text=prompt),
+        ],
+    )
+    image_out = None
+    for part in response.candidates[0].content.parts:
+        if part.inline_data and part.inline_data.data:
+            image_out = part.inline_data.data
+            break
+    if image_out is None:
+        raise RuntimeError("Model returned no image")
+    return _add_die_cut(_key_out_background(image_out))
+
+
 def generate_sticker(image_bytes: bytes, style: str = "cutout", fmt: str = "png") -> bytes:
     if style not in STYLES:
         raise ValueError(f"Unknown style '{style}'. Options: {', '.join(STYLES)}")
@@ -173,29 +208,24 @@ def generate_sticker(image_bytes: bytes, style: str = "cutout", fmt: str = "png"
 
     if style == "photo":
         return _photo_sticker(image_bytes, fmt)
-    elif style == "cutout":
-        prompt = CUTOUT_PROMPT
-    else:
-        prompt = STYLE_PROMPT.format(style=STYLES[style])
+    prompt = CUTOUT_PROMPT if style == "cutout" else STYLE_PROMPT.format(style=STYLES[style])
 
-    response = client.models.generate_content(
-        model=IMAGE_MODEL,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-            types.Part.from_text(text=prompt),
-        ],
-    )
-
-    image_out = None
-    for part in response.candidates[0].content.parts:
-        if part.inline_data and part.inline_data.data:
-            image_out = part.inline_data.data
+    # Generate, and quality-gate the result. A failed key / white blob is
+    # retried once, then falls back to a clean Photo sticker so a broken
+    # sticker never ships.
+    img = None
+    for _ in range(2):
+        try:
+            candidate = _gen_cutout(image_bytes, prompt)
+        except Exception:
+            continue
+        if _is_clean_cutout(candidate):
+            img = candidate
             break
-    if image_out is None:
-        raise RuntimeError("Model returned no image")
+        img = candidate  # keep the last one as a fallback reference
+    if img is None or not _is_clean_cutout(img):
+        return _photo_sticker(image_bytes, fmt)
 
-    img = _key_out_background(image_out)
-    img = _add_die_cut(img)
     buf = io.BytesIO()
     img.save(buf, format=fmt.upper())
     return buf.getvalue()
