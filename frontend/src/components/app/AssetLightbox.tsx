@@ -25,10 +25,14 @@ export default function AssetLightbox({
   item: PreviewItem;
   onClose: () => void;
 }) {
-  const [shown, setShown] = useState(item.url);
+  // Each ratio expands from the ORIGINAL (never compounds), and results are
+  // cached so switching between ratios is instant and non-destructive.
+  const [active, setActive] = useState<string | null>(null); // null = original
+  const [cache, setCache] = useState<Record<string, string>>({});
   const [expanding, setExpanding] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
+
+  const shown = active ? cache[active] : item.url;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -39,17 +43,19 @@ export default function AssetLightbox({
   function download() {
     const a = document.createElement("a");
     a.href = shown;
-    a.download = expanded ? `expanded_${item.downloadName}` : item.downloadName;
+    a.download = active ? `expanded_${active.replace(":", "x")}_${item.downloadName}` : item.downloadName;
     a.click();
   }
 
   async function doExpand(aspect: string) {
+    if (cache[aspect]) { setActive(aspect); return; }  // already generated
     setExpanding(aspect);
     setError(null);
     try {
-      const b64 = await expandImage(b64Of(shown), aspect);
-      setShown(`data:image/jpeg;base64,${b64}`);
-      setExpanded(true);
+      const b64 = await expandImage(b64Of(item.url), aspect);  // always from original
+      const url = `data:image/jpeg;base64,${b64}`;
+      setCache((c) => ({ ...c, [aspect]: url }));
+      setActive(aspect);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -111,14 +117,29 @@ export default function AssetLightbox({
                 <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
                   <Sparkles size={12} /> Expand
                 </span>
+                <button
+                  onClick={() => setActive(null)}
+                  disabled={!!expanding}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                    active === null
+                      ? "border-ember bg-ember/15 text-ember"
+                      : "border-white/15 bg-transparent text-white/80 hover:border-white/35"
+                  }`}
+                >
+                  Original
+                </button>
                 {EXPAND_ASPECTS.map((a) => (
                   <button
                     key={a}
                     onClick={() => doExpand(a)}
                     disabled={!!expanding}
-                    className="rounded-full border border-white/15 bg-transparent px-2.5 py-1 text-[11px] font-medium text-white/80 transition hover:border-ember hover:text-white disabled:opacity-40"
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                      active === a
+                        ? "border-ember bg-ember/15 text-ember"
+                        : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                    }`}
                   >
-                    {a}
+                    {a}{cache[a] ? "" : ""}
                   </button>
                 ))}
               </div>
