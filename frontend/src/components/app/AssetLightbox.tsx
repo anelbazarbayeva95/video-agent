@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Download, Sparkles, Loader } from "lucide-react";
+import { X, Download, Sparkles, Loader, RotateCcw } from "lucide-react";
 import { expandImage } from "../../api";
 
 export interface PreviewItem {
@@ -119,14 +119,15 @@ export default function AssetLightbox({
                 </span>
                 <button
                   onClick={() => setActive(null)}
-                  disabled={!!expanding}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                  disabled={!!expanding || active === null}
+                  title="Undo — back to the original frame"
+                  className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                     active === null
                       ? "border-ember bg-ember/15 text-ember"
-                      : "border-white/15 bg-transparent text-white/80 hover:border-white/35"
+                      : "border-white/25 bg-white/5 text-white/85 hover:border-white/45 hover:text-white"
                   }`}
                 >
-                  Original
+                  <RotateCcw size={11} /> {active === null ? "Original" : "Undo"}
                 </button>
                 {EXPAND_ASPECTS.map((a) => (
                   <button
