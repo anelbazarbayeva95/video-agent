@@ -12,7 +12,7 @@ export interface PreviewItem {
   downloadName: string;
 }
 
-const EXPAND_ASPECTS = ["16:9", "9:16", "1:1"] as const;
+const EXPAND_ASPECTS = ["16:9", "9:16"] as const;
 
 function b64Of(dataUrl: string) {
   return dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
