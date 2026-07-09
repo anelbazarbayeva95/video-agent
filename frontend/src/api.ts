@@ -132,13 +132,33 @@ export async function reframe(imageB64: string, aspect: Aspect): Promise<Blob> {
   return res.blob();
 }
 
-export async function expandImage(imageB64: string, aspect: string): Promise<string> {
+export interface ExpandMargins {
+  left?: number;
+  right?: number;
+  top?: number;
+  bottom?: number;
+}
+
+function blobToB64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve((r.result as string).split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+function b64ToBytes(imageB64: string): Uint8Array {
   const bin = atob(imageB64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
 
+// Preset expand: symmetric to a named aspect ratio.
+export async function expandImage(imageB64: string, aspect: string): Promise<string> {
   const form = new FormData();
-  form.append("file", new Blob([bytes], { type: "image/jpeg" }), "frame.jpg");
+  form.append("file", new Blob([b64ToBytes(imageB64)], { type: "image/jpeg" }), "frame.jpg");
   form.append("aspect", aspect);
 
   const res = await fetch(`${API}/expand`, { method: "POST", body: form });
@@ -146,13 +166,24 @@ export async function expandImage(imageB64: string, aspect: string): Promise<str
     const err = await res.json().catch(() => null);
     throw new Error(err?.detail || "Expand failed");
   }
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve((r.result as string).split(",")[1]);
-    r.onerror = reject;
-    r.readAsDataURL(blob);
-  });
+  return blobToB64(await res.blob());
+}
+
+// Free-form expand: extend each side by a fraction of its dimension (drag).
+export async function expandMargins(imageB64: string, m: ExpandMargins): Promise<string> {
+  const form = new FormData();
+  form.append("file", new Blob([b64ToBytes(imageB64)], { type: "image/jpeg" }), "frame.jpg");
+  form.append("left", String(m.left ?? 0));
+  form.append("right", String(m.right ?? 0));
+  form.append("top", String(m.top ?? 0));
+  form.append("bottom", String(m.bottom ?? 0));
+
+  const res = await fetch(`${API}/expand`, { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail || "Expand failed");
+  }
+  return blobToB64(await res.blob());
 }
 
 export const STICKER_STYLES = [

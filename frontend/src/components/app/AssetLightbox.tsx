@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Download, Sparkles, Loader, RotateCcw } from "lucide-react";
-import { expandImage } from "../../api";
+import { X, Download, Sparkles, Loader, RotateCcw, Move } from "lucide-react";
+import { expandImage, expandMargins } from "../../api";
 
 export interface PreviewItem {
   url: string;
@@ -13,10 +13,16 @@ export interface PreviewItem {
 }
 
 const EXPAND_ASPECTS = ["16:9", "9:16"] as const;
+const MAX_MARGIN = 1.5;
+
+type Side = "left" | "right" | "top" | "bottom";
+interface Margins { left: number; right: number; top: number; bottom: number; }
+const ZERO: Margins = { left: 0, right: 0, top: 0, bottom: 0 };
 
 function b64Of(dataUrl: string) {
   return dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
 }
+const clamp = (v: number) => Math.max(0, Math.min(MAX_MARGIN, v));
 
 export default function AssetLightbox({
   item,
@@ -25,34 +31,60 @@ export default function AssetLightbox({
   item: PreviewItem;
   onClose: () => void;
 }) {
-  // Each ratio expands from the ORIGINAL (never compounds), and results are
-  // cached so switching between ratios is instant and non-destructive.
-  const [active, setActive] = useState<string | null>(null); // null = original
+  // Every expand (preset or drag) works from the ORIGINAL frame, never
+  // compounding. Preset results are cached per ratio; the drag result is kept
+  // separately. "Undo" returns to the original without discarding either.
+  const [active, setActive] = useState<string | null>(null); // null | "16:9" | "9:16" | "custom"
   const [cache, setCache] = useState<Record<string, string>>({});
+  const [customUrl, setCustomUrl] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [margins, setMargins] = useState<Margins>(ZERO);
   const [expanding, setExpanding] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const shown = active ? cache[active] : item.url;
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [rendered, setRendered] = useState({ w: 0, h: 0 });
+
+  const shown = editing
+    ? item.url
+    : active === "custom"
+    ? customUrl ?? item.url
+    : active
+    ? cache[active]
+    : item.url;
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && (editing ? cancelEdit() : onClose());
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, editing]);
+
+  function measure() {
+    const el = imgRef.current;
+    if (el) setRendered({ w: el.clientWidth, h: el.clientHeight });
+  }
+  useEffect(() => {
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   function download() {
     const a = document.createElement("a");
     a.href = shown;
-    a.download = active ? `expanded_${active.replace(":", "x")}_${item.downloadName}` : item.downloadName;
+    a.download =
+      active && active !== null
+        ? `expanded_${active.replace(":", "x")}_${item.downloadName}`
+        : item.downloadName;
     a.click();
   }
 
   async function doExpand(aspect: string) {
-    if (cache[aspect]) { setActive(aspect); return; }  // already generated
+    setEditing(false);
+    if (cache[aspect]) { setActive(aspect); return; }
     setExpanding(aspect);
     setError(null);
     try {
-      const b64 = await expandImage(b64Of(item.url), aspect);  // always from original
+      const b64 = await expandImage(b64Of(item.url), aspect); // from original
       const url = `data:image/jpeg;base64,${b64}`;
       setCache((c) => ({ ...c, [aspect]: url }));
       setActive(aspect);
@@ -62,6 +94,75 @@ export default function AssetLightbox({
       setExpanding(null);
     }
   }
+
+  function startEdit() {
+    setActive(null);
+    setMargins(ZERO);
+    setEditing(true);
+    requestAnimationFrame(measure);
+  }
+  function cancelEdit() {
+    setEditing(false);
+    setMargins(ZERO);
+  }
+
+  async function generateCustom() {
+    if (margins.left + margins.right + margins.top + margins.bottom === 0) return;
+    setExpanding("custom");
+    setError(null);
+    try {
+      const b64 = await expandMargins(b64Of(item.url), margins); // from original
+      setCustomUrl(`data:image/jpeg;base64,${b64}`);
+      setActive("custom");
+      setEditing(false);
+      setMargins(ZERO);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setExpanding(null);
+    }
+  }
+
+  // Drag a single edge outward to grow that side's margin.
+  function onHandleDown(side: Side) {
+    return (e: React.PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const target = e.currentTarget as HTMLElement;
+      target.setPointerCapture(e.pointerId);
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const start = margins[side];
+      const w = rendered.w || 1;
+      const h = rendered.h || 1;
+
+      const move = (ev: PointerEvent) => {
+        let next = start;
+        if (side === "left") next = start + (startX - ev.clientX) / w;
+        if (side === "right") next = start + (ev.clientX - startX) / w;
+        if (side === "top") next = start + (startY - ev.clientY) / h;
+        if (side === "bottom") next = start + (ev.clientY - startY) / h;
+        setMargins((m) => ({ ...m, [side]: clamp(next) }));
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    };
+  }
+
+  const anyMargin = margins.left + margins.right + margins.top + margins.bottom > 0;
+  const pad = {
+    left: margins.left * rendered.w,
+    right: margins.right * rendered.w,
+    top: margins.top * rendered.h,
+    bottom: margins.bottom * rendered.h,
+  };
+
+  const handleCls =
+    "absolute z-20 rounded-full border-2 border-ember bg-ink shadow-lg touch-none";
 
   return (
     <motion.div
@@ -84,18 +185,74 @@ export default function AssetLightbox({
         <button
           onClick={onClose}
           aria-label="Close preview"
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-black/60 text-white transition hover:bg-black/80"
+          className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg bg-black/60 text-white transition hover:bg-black/80"
         >
           <X size={18} />
         </button>
 
-        <div className={`relative flex min-h-0 flex-1 items-center justify-center ${item.transparent ? "sticker-checker" : "bg-black"}`}>
-          <img src={shown} alt={item.label} className="max-h-[78vh] max-w-[92vw] object-contain" />
+        <div
+          className={`relative flex min-h-0 flex-1 items-center justify-center p-6 ${
+            item.transparent ? "sticker-checker" : "bg-black"
+          }`}
+        >
+          {editing ? (
+            // Drag-to-expand editor: the tinted, dashed zone is the new canvas.
+            <div
+              className="relative"
+              style={{
+                paddingLeft: pad.left,
+                paddingRight: pad.right,
+                paddingTop: pad.top,
+                paddingBottom: pad.bottom,
+              }}
+            >
+              {anyMargin && (
+                <div className="pointer-events-none absolute inset-0 rounded-md border-2 border-dashed border-ember/70 bg-ember/10" />
+              )}
+              <img
+                ref={imgRef}
+                src={item.url}
+                alt={item.label}
+                onLoad={measure}
+                draggable={false}
+                className="block max-h-[52vh] max-w-[64vw] select-none object-contain"
+              />
+              {/* edge handles */}
+              <div
+                className={`${handleCls} h-9 w-4 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize`}
+                style={{ left: pad.left, top: pad.top + rendered.h / 2 }}
+                onPointerDown={onHandleDown("left")}
+              />
+              <div
+                className={`${handleCls} h-9 w-4 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize`}
+                style={{ left: pad.left + rendered.w, top: pad.top + rendered.h / 2 }}
+                onPointerDown={onHandleDown("right")}
+              />
+              <div
+                className={`${handleCls} h-4 w-9 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize`}
+                style={{ left: pad.left + rendered.w / 2, top: pad.top }}
+                onPointerDown={onHandleDown("top")}
+              />
+              <div
+                className={`${handleCls} h-4 w-9 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize`}
+                style={{ left: pad.left + rendered.w / 2, top: pad.top + rendered.h }}
+                onPointerDown={onHandleDown("bottom")}
+              />
+            </div>
+          ) : (
+            <img src={shown} alt={item.label} className="max-h-[78vh] max-w-[92vw] object-contain" />
+          )}
+
           {expanding && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 text-sm text-white">
               <Loader size={22} className="animate-spin" />
-              Expanding to {expanding}…
+              {expanding === "custom" ? "Expanding…" : `Expanding to ${expanding}…`}
             </div>
+          )}
+          {editing && !expanding && (
+            <p className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-[11px] text-white/80">
+              Drag any edge outward, then Generate
+            </p>
           )}
         </div>
 
@@ -111,50 +268,85 @@ export default function AssetLightbox({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Expand (outpaint) — not for transparent stickers */}
-            {!item.transparent && (
-              <div className="flex items-center gap-1.5">
-                <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
-                  <Sparkles size={12} /> Expand
-                </span>
+            {editing ? (
+              <>
                 <button
-                  onClick={() => setActive(null)}
-                  disabled={!!expanding || active === null}
-                  title="Undo — back to the original frame"
-                  className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
-                    active === null
-                      ? "border-ember bg-ember/15 text-ember"
-                      : "border-white/25 bg-white/5 text-white/85 hover:border-white/45 hover:text-white"
-                  }`}
+                  onClick={cancelEdit}
+                  disabled={!!expanding}
+                  className="rounded-full border border-white/25 bg-white/5 px-3 py-2 text-sm font-medium text-white/85 transition hover:border-white/45 disabled:opacity-40"
                 >
-                  <RotateCcw size={11} /> {active === null ? "Original" : "Undo"}
+                  Cancel
                 </button>
-                {EXPAND_ASPECTS.map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => doExpand(a)}
-                    disabled={!!expanding}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
-                      active === a
-                        ? "border-ember bg-ember/15 text-ember"
-                        : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
-                    }`}
-                  >
-                    {a}{cache[a] ? "" : ""}
-                  </button>
-                ))}
-              </div>
+                <button
+                  onClick={generateCustom}
+                  disabled={!!expanding || !anyMargin}
+                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55] disabled:opacity-40"
+                >
+                  <Sparkles size={14} /> Generate
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Expand (outpaint) — not for transparent stickers */}
+                {!item.transparent && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
+                      <Sparkles size={12} /> Expand
+                    </span>
+                    <button
+                      onClick={() => setActive(null)}
+                      disabled={!!expanding || active === null}
+                      title="Undo — back to the original frame"
+                      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                        active === null
+                          ? "border-ember bg-ember/15 text-ember"
+                          : "border-white/25 bg-white/5 text-white/85 hover:border-white/45 hover:text-white"
+                      }`}
+                    >
+                      <RotateCcw size={11} /> {active === null ? "Original" : "Undo"}
+                    </button>
+                    {EXPAND_ASPECTS.map((a) => (
+                      <button
+                        key={a}
+                        onClick={() => doExpand(a)}
+                        disabled={!!expanding}
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                          active === a
+                            ? "border-ember bg-ember/15 text-ember"
+                            : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    ))}
+                    <button
+                      onClick={startEdit}
+                      disabled={!!expanding}
+                      title="Drag edges to expand freely"
+                      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                        active === "custom"
+                          ? "border-ember bg-ember/15 text-ember"
+                          : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                      }`}
+                    >
+                      <Move size={11} /> Custom
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={download}
+                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+                >
+                  <Download size={14} /> Download
+                </button>
+              </>
             )}
-            <button
-              onClick={download}
-              className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
-            >
-              <Download size={14} /> Download
-            </button>
           </div>
         </div>
 
-        {error && <p className="border-t border-white/10 bg-[#0d0d0d] px-4 py-2 text-xs text-red-300">{error}</p>}
+        {error && (
+          <p className="border-t border-white/10 bg-[#0d0d0d] px-4 py-2 text-xs text-red-300">{error}</p>
+        )}
       </motion.div>
     </motion.div>
   );
