@@ -9,7 +9,7 @@ from frames import extract_best_frames
 from sticker import generate_sticker, STYLES
 from reframe import smart_crop, ASPECTS
 from asset_pack import build_asset_pack
-from expand import expand as expand_image, ASPECTS as EXPAND_ASPECTS
+from expand import expand as expand_image, expand_margins, ASPECTS as EXPAND_ASPECTS
 
 load_dotenv()
 
@@ -101,12 +101,28 @@ async def asset_pack(
 
 
 @app.post("/expand")
-async def expand(file: UploadFile = File(...), aspect: str = Form("16:9")):
-    if aspect not in EXPAND_ASPECTS:
-        raise HTTPException(400, f"Unknown aspect. Options: {', '.join(EXPAND_ASPECTS)}")
+async def expand(
+    file: UploadFile = File(...),
+    aspect: str = Form(None),
+    left: float = Form(0.0),
+    right: float = Form(0.0),
+    top: float = Form(0.0),
+    bottom: float = Form(0.0),
+):
+    """Two modes. Preset: pass `aspect` (16:9/9:16/...). Free-form: pass any of
+    left/right/top/bottom as fractions of the image's width/height to drag each
+    side out independently."""
     contents = await file.read()
+    custom = any(v > 0 for v in (left, right, top, bottom))
     try:
-        image = expand_image(contents, aspect)
+        if custom:
+            image = expand_margins(contents, left, right, top, bottom)
+        else:
+            if aspect not in EXPAND_ASPECTS:
+                raise HTTPException(400, f"Unknown aspect. Options: {', '.join(EXPAND_ASPECTS)}")
+            image = expand_image(contents, aspect)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(500, str(e))
     return Response(
