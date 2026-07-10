@@ -12,6 +12,11 @@ export interface PreviewItem {
   downloadName: string;
 }
 
+// Expand (outpaint) is shelved until the model quality is reliable on large
+// ratio changes. Flip to true to bring back the Expand controls; all the
+// backend + drag code is intact.
+const EXPAND_ENABLED = false;
+
 const EXPAND_ASPECTS = ["16:9", "9:16"] as const;
 const MAX_MARGIN = 1.5;
 
@@ -287,8 +292,8 @@ export default function AssetLightbox({
               </>
             ) : (
               <>
-                {/* Expand (outpaint) — not for transparent stickers */}
-                {!item.transparent && (
+                {/* Expand (outpaint) — shelved via EXPAND_ENABLED; not for stickers */}
+                {EXPAND_ENABLED && !item.transparent && (
                   <div className="flex items-center gap-1.5">
                     <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
                       <Sparkles size={12} /> Expand
