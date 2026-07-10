@@ -148,7 +148,7 @@ function blobToB64(blob: Blob): Promise<string> {
   });
 }
 
-function b64ToBytes(imageB64: string): Uint8Array {
+function b64ToBytes(imageB64: string): Uint8Array<ArrayBuffer> {
   const bin = atob(imageB64);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
