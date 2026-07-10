@@ -1,4 +1,5 @@
 import io
+import math
 import os
 from PIL import Image, ImageFilter
 from google import genai
@@ -22,15 +23,19 @@ LONG_SIDE = 1600          # cap on the generated canvas's longer side
 MAX_MARGIN = 1.5          # cap each side's drag at 150% of the dimension
 
 EXPAND_PROMPT = """Outpaint this image to fill the whole frame. The center is a \
-real photo; the hazy/streaked areas around it are empty canvas you must replace \
-with newly generated content. Extend the scene outward so it looks like a single \
-wider photograph taken from the same spot — invent plausible surroundings that \
-match the lighting, shadows, colors, textures, perspective, and depth of field. \
-The generated areas must be fully detailed and photographic, never blurred or \
-streaked, and must blend into the center with no visible seam or brightness step. \
-Preserve the central subject exactly — same people, same faces and identity, same \
-pose, clothing, and expression; do not alter, duplicate, or move them. Output one \
-seamless photograph."""
+real photo; the soft, blurred areas around it are a rough guide for empty canvas \
+that you must repaint with newly generated, sharp, photographic content. Extend \
+the scene outward so it looks like a single wider photograph taken from the same \
+spot — invent plausible surroundings that match the lighting, shadows, colors, \
+textures, perspective, and depth of field. The generated areas must be fully \
+detailed and in focus, never blurred, streaked, or smudged, and must blend into \
+the center with no visible seam or brightness step. IMPORTANT: the guide may \
+contain faint mirrored or duplicated copies of the people or objects — do NOT \
+keep them; the surroundings must contain only natural background (sky, foliage, \
+ground, scenery), no repeated or reflected subjects. Preserve the central subject \
+exactly — same people, same faces and identity, same pose, clothing, and \
+expression; do not alter, duplicate, or move them. Output one seamless \
+photograph."""
 
 
 def _canvas_size(w, h, ratio):
@@ -39,38 +44,36 @@ def _canvas_size(w, h, ratio):
     return w, round(w / ratio)
 
 
-def _edge_smear(orig, cw, ch, ox, oy):
-    """Fill the expansion area by stretching the original's edge pixels outward,
-    giving the model real color/structure to continue instead of flat blur.
-
-    Handles asymmetric expansion: each side is filled only if it has room, so a
-    drag that extends only (say) the right edge still gets a real edge strip."""
+def _mirror_fill(orig, cw, ch, ox, oy):
+    """Fill the expansion area with a seamless mirror-reflection of the image,
+    then soften it. Reflection gives the model real, continuous texture/color to
+    refine (no stretched streaks), and works for any expansion size by tiling.
+    The crisp original is pasted back on top so only the subject stays sharp."""
     w, h = orig.size
-    left, right = ox, cw - ox - w
-    top, bottom = oy, ch - oy - h
-
+    flips = {
+        (0, 0): orig,
+        (1, 0): orig.transpose(Image.FLIP_LEFT_RIGHT),
+        (0, 1): orig.transpose(Image.FLIP_TOP_BOTTOM),
+        (1, 1): orig.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.FLIP_TOP_BOTTOM),
+    }
     canvas = Image.new("RGB", (cw, ch))
-    # base: stretch whole image to cover, softly blurred so leftover streaks
-    # the model doesn't repaint read as haze, not hard smears
-    canvas.paste(orig.resize((cw, ch)).filter(ImageFilter.GaussianBlur(12)), (0, 0))
+    i0, i1 = math.ceil(ox / w), math.ceil((cw - ox - w) / w)
+    j0, j1 = math.ceil(oy / h), math.ceil((ch - oy - h) / h)
+    for i in range(-i0, i1 + 1):
+        for j in range(-j0, j1 + 1):
+            canvas.paste(flips[(abs(i) % 2, abs(j) % 2)], (ox + i * w, oy + j * h))
 
-    strip = max(2, min(w, h) // 50)
-    if left > 0:
-        canvas.paste(orig.crop((0, 0, strip, h)).resize((left, h)), (0, oy))
-    if right > 0:
-        canvas.paste(orig.crop((w - strip, 0, w, h)).resize((right, h)), (ox + w, oy))
-    if top > 0:
-        canvas.paste(orig.crop((0, 0, w, strip)).resize((w, top)), (ox, 0))
-    if bottom > 0:
-        canvas.paste(orig.crop((0, h - strip, w, h)).resize((w, bottom)), (ox, oy + h))
+    # Soften the whole reflected plane so the model reads it as a guide to
+    # repaint (and mirrored subjects blur away), then restore the sharp original.
+    canvas = canvas.filter(ImageFilter.GaussianBlur(max(6, min(w, h) // 40)))
     canvas.paste(orig, (ox, oy))
     return canvas
 
 
 def _generate(orig, cw, ch, ox, oy, long_side):
-    """Edge-smear the expansion area, let the model outpaint it seamlessly, and
+    """Mirror-fill the expansion area, let the model outpaint it seamlessly, and
     return the result downscaled to `long_side` as JPEG bytes."""
-    canvas = _edge_smear(orig, cw, ch, ox, oy)
+    canvas = _mirror_fill(orig, cw, ch, ox, oy)
     buf = io.BytesIO()
     canvas.save(buf, format="JPEG", quality=92)
 
@@ -112,8 +115,9 @@ def expand(image_bytes: bytes, aspect: str) -> bytes:
     orig = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     w, h = orig.size
     cw, ch = _canvas_size(w, h, ratio)
-    if (cw, ch) == (w, h):
-        return image_bytes
+    # Growth under ~2% means the frame is already this aspect — nothing to add.
+    if cw <= w * 1.02 and ch <= h * 1.02:
+        raise ValueError(f"This frame is already {aspect} — nothing to expand. Try the other ratio or Custom.")
     ox, oy = (cw - w) // 2, (ch - h) // 2
     return _generate(orig, cw, ch, ox, oy, long_side)
 

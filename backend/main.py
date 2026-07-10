@@ -123,6 +123,8 @@ async def expand(
             image = expand_image(contents, aspect)
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, str(e))
     return Response(
