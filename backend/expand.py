@@ -63,9 +63,11 @@ def _mirror_fill(orig, cw, ch, ox, oy):
         for j in range(-j0, j1 + 1):
             canvas.paste(flips[(abs(i) % 2, abs(j) % 2)], (ox + i * w, oy + j * h))
 
-    # Soften the whole reflected plane so the model reads it as a guide to
-    # repaint (and mirrored subjects blur away), then restore the sharp original.
-    canvas = canvas.filter(ImageFilter.GaussianBlur(max(6, min(w, h) // 40)))
+    # Soften the reflected plane just enough to read as an unfinished guide the
+    # model repaints (a light blur ~12px reliably triggers regeneration; heavier
+    # blur reads as real bokeh and gets echoed back). Then restore the sharp
+    # original so only the subject stays crisp.
+    canvas = canvas.filter(ImageFilter.GaussianBlur(12))
     canvas.paste(orig, (ox, oy))
     return canvas
 
