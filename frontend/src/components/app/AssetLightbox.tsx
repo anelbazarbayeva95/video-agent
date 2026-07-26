@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Download, Sparkles, Loader, RotateCcw, Move } from "lucide-react";
-import { expandImage, expandMargins } from "../../api";
+import { X, Download, Sparkles, Loader, RotateCcw, Move, Crop } from "lucide-react";
+import { expandImage, expandMargins, reframe } from "../../api";
+import type { Aspect } from "../../api";
 
 export interface PreviewItem {
   url: string;
@@ -12,12 +13,13 @@ export interface PreviewItem {
   downloadName: string;
 }
 
-// Expand (outpaint) is shelved until the model quality is reliable on large
-// ratio changes. Flip to true to bring back the Expand controls; all the
-// backend + drag code is intact.
-const EXPAND_ENABLED = false;
+// Expand (outpaint) — generative canvas growth. Set to false to hide the
+// Expand controls (Resize stays available); all backend + drag code is intact.
+const EXPAND_ENABLED = true;
 
 const EXPAND_ASPECTS = ["16:9", "9:16"] as const;
+// Resize (smart crop to an aspect, no generated pixels).
+const RESIZE_ASPECTS: Aspect[] = ["16:9", "9:16", "1:1"];
 const MAX_MARGIN = 1.5;
 
 type Side = "left" | "right" | "top" | "bottom";
@@ -45,17 +47,19 @@ export default function AssetLightbox({
   const [editing, setEditing] = useState(false);
   const [margins, setMargins] = useState<Margins>(ZERO);
   const [expanding, setExpanding] = useState<string | null>(null);
+  const [resizing, setResizing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const busy = !!expanding || !!resizing;
 
   const imgRef = useRef<HTMLImageElement>(null);
   const [rendered, setRendered] = useState({ w: 0, h: 0 });
 
   const shown = editing
     ? item.url
-    : active === "custom"
+    : active === "expand:custom"
     ? customUrl ?? item.url
     : active
-    ? cache[active]
+    ? cache[active] ?? item.url
     : item.url;
 
   useEffect(() => {
@@ -76,27 +80,47 @@ export default function AssetLightbox({
   function download() {
     const a = document.createElement("a");
     a.href = shown;
-    a.download =
-      active && active !== null
-        ? `expanded_${active.replace(":", "x")}_${item.downloadName}`
-        : item.downloadName;
+    let name = item.downloadName;
+    if (active?.startsWith("expand:")) name = `expanded_${active.slice(7).replace(":", "x")}_${item.downloadName}`;
+    else if (active?.startsWith("resize:")) name = `resized_${active.slice(7).replace(":", "x")}_${item.downloadName}`;
+    a.download = name;
     a.click();
   }
 
   async function doExpand(aspect: string) {
     setEditing(false);
-    if (cache[aspect]) { setActive(aspect); return; }
+    const key = `expand:${aspect}`;
+    if (cache[key]) { setActive(key); return; }
     setExpanding(aspect);
     setError(null);
     try {
       const b64 = await expandImage(b64Of(item.url), aspect); // from original
-      const url = `data:image/jpeg;base64,${b64}`;
-      setCache((c) => ({ ...c, [aspect]: url }));
-      setActive(aspect);
+      setCache((c) => ({ ...c, [key]: `data:image/jpeg;base64,${b64}` }));
+      setActive(key);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setExpanding(null);
+    }
+  }
+
+  // Resize = smart crop to a target aspect (subject kept centered, no generated
+  // pixels). Cached per aspect, keyed separately from Expand so the two don't
+  // collide on shared ratios like 16:9.
+  async function doResize(aspect: Aspect) {
+    setEditing(false);
+    const key = `resize:${aspect}`;
+    if (cache[key]) { setActive(key); return; }
+    setResizing(aspect);
+    setError(null);
+    try {
+      const blob = await reframe(b64Of(item.url), aspect); // from original
+      setCache((c) => ({ ...c, [key]: URL.createObjectURL(blob) }));
+      setActive(key);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setResizing(null);
     }
   }
 
@@ -118,7 +142,7 @@ export default function AssetLightbox({
     try {
       const b64 = await expandMargins(b64Of(item.url), margins); // from original
       setCustomUrl(`data:image/jpeg;base64,${b64}`);
-      setActive("custom");
+      setActive("expand:custom");
       setEditing(false);
       setMargins(ZERO);
     } catch (e: any) {
@@ -248,10 +272,14 @@ export default function AssetLightbox({
             <img src={shown} alt={item.label} className="max-h-[78vh] max-w-[92vw] object-contain" />
           )}
 
-          {expanding && (
+          {(expanding || resizing) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 text-sm text-white">
               <Loader size={22} className="animate-spin" />
-              {expanding === "custom" ? "Expanding…" : `Expanding to ${expanding}…`}
+              {resizing
+                ? `Resizing to ${resizing}…`
+                : expanding === "custom"
+                ? "Expanding…"
+                : `Expanding to ${expanding}…`}
             </div>
           )}
           {editing && !expanding && (
@@ -292,15 +320,13 @@ export default function AssetLightbox({
               </>
             ) : (
               <>
-                {/* Expand (outpaint) — shelved via EXPAND_ENABLED; not for stickers */}
-                {EXPAND_ENABLED && !item.transparent && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
-                      <Sparkles size={12} /> Expand
-                    </span>
+                {/* Expand + Resize — not for stickers (transparent cutouts) */}
+                {!item.transparent && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Shared Undo — back to the original frame */}
                     <button
                       onClick={() => setActive(null)}
-                      disabled={!!expanding || active === null}
+                      disabled={busy || active === null}
                       title="Undo — back to the original frame"
                       className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                         active === null
@@ -310,13 +336,52 @@ export default function AssetLightbox({
                     >
                       <RotateCcw size={11} /> {active === null ? "Original" : "Undo"}
                     </button>
-                    {EXPAND_ASPECTS.map((a) => (
+
+                    {EXPAND_ENABLED && (
+                      <>
+                        <span className="flex items-center gap-1 pl-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
+                          <Sparkles size={12} /> Expand
+                        </span>
+                        {EXPAND_ASPECTS.map((a) => (
+                          <button
+                            key={a}
+                            onClick={() => doExpand(a)}
+                            disabled={busy}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                              active === `expand:${a}`
+                                ? "border-ember bg-ember/15 text-ember"
+                                : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                            }`}
+                          >
+                            {a}
+                          </button>
+                        ))}
+                        <button
+                          onClick={startEdit}
+                          disabled={busy}
+                          title="Drag edges to expand freely"
+                          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                            active === "expand:custom"
+                              ? "border-ember bg-ember/15 text-ember"
+                              : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                          }`}
+                        >
+                          <Move size={11} /> Custom
+                        </button>
+                      </>
+                    )}
+
+                    {/* Resize — smart crop to an aspect */}
+                    <span className="flex items-center gap-1 pl-1 text-[11px] uppercase tracking-[0.14em] text-white/45">
+                      <Crop size={12} /> Resize
+                    </span>
+                    {RESIZE_ASPECTS.map((a) => (
                       <button
                         key={a}
-                        onClick={() => doExpand(a)}
-                        disabled={!!expanding}
+                        onClick={() => doResize(a)}
+                        disabled={busy}
                         className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
-                          active === a
+                          active === `resize:${a}`
                             ? "border-ember bg-ember/15 text-ember"
                             : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
                         }`}
@@ -324,18 +389,6 @@ export default function AssetLightbox({
                         {a}
                       </button>
                     ))}
-                    <button
-                      onClick={startEdit}
-                      disabled={!!expanding}
-                      title="Drag edges to expand freely"
-                      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
-                        active === "custom"
-                          ? "border-ember bg-ember/15 text-ember"
-                          : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
-                      }`}
-                    >
-                      <Move size={11} /> Custom
-                    </button>
                   </div>
                 )}
                 <button
