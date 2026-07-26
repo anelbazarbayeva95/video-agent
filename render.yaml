@@ -1,0 +1,14 @@
+# Render blueprint for the Kadr backend. In Render: New → Blueprint → point at
+# this repo; it builds backend/Dockerfile as a free Docker web service. Set the
+# GEMINI_API_KEY value in the dashboard (sync: false keeps it out of the repo).
+services:
+  - type: web
+    name: kadr-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false

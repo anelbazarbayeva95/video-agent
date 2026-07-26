@@ -12,29 +12,34 @@ pinned: false
 
 FastAPI backend for **Kadr** — best-frame extraction, stickers, reframing,
 expand/outpaint, and the streaming asset-pack pipeline. Powered by Gemini and
-ffmpeg. This folder is self-contained and deploys as a Docker image.
+ffmpeg. This folder is self-contained and deploys as a Docker image, so it runs
+on any Docker host.
 
-## Deploy on Hugging Face Spaces (free, no credit card)
+## Deploy on Render (free, no credit card) — recommended
 
-1. Create a new Space → **SDK: Docker** → **Blank**.
-2. Push the contents of this `backend/` folder to the Space repo so that this
-   `README.md` and the `Dockerfile` sit at the **repo root** (HF reads the
-   front-matter above to configure the Space, and builds the Dockerfile).
+The repo ships a `render.yaml` blueprint that builds this `Dockerfile`.
 
-   ```bash
-   # from a clone of the Space repo
-   git clone https://huggingface.co/spaces/<user>/<space> kadr-space
-   cp -r /path/to/video-agent/backend/. kadr-space/
-   cd kadr-space && git add . && git commit -m "Kadr API" && git push
-   ```
-3. In the Space's **Settings → Variables and secrets**, add a **secret** named
-   `GEMINI_API_KEY` (get one at aistudio.google.com).
-4. The Space builds and serves on port 7860. Its public URL is
-   `https://<user>-<space>.hf.space`.
+1. In Render → **New → Blueprint**, connect this GitHub repo. Render reads
+   `render.yaml` and creates a free Docker web service (`kadr-api`).
+   (Or **New → Web Service**, pick the repo, set **Root Directory** to
+   `backend` and Runtime to **Docker**.)
+2. In the service's **Environment**, add `GEMINI_API_KEY` (from aistudio.google.com).
+3. Deploy. The public URL is `https://kadr-api.onrender.com` (or similar).
 
-Note: free Spaces sleep after inactivity and cold-start on the next request —
-the frontend health-checks before uploading and offers a Retry, so this is
-handled gracefully.
+Health check: `GET /health`. Note the free tier is 512 MB RAM and cold-starts
+after ~15 min idle — the frontend health-checks before uploading and offers a
+Retry, so cold starts are handled gracefully.
+
+## Alternatives
+
+- **Koyeb** (free, no card): New service → Docker → this repo, Dockerfile path
+  `backend/Dockerfile`, add the `GEMINI_API_KEY` env var.
+- **Hugging Face Spaces**: the front-matter above configures a **Docker** Space,
+  but Docker Spaces now require a paid HF plan; the free Static/Gradio SDKs don't
+  fit a FastAPI service. Use only if you have a paid Space. If so: push this
+  `backend/` folder to the Space repo (README + Dockerfile at root), add
+  `GEMINI_API_KEY` as a secret; it serves on port 7860 at
+  `https://<user>-<space>.hf.space`.
 
 ## Point the frontend at it
 
