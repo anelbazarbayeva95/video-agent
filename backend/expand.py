@@ -21,6 +21,8 @@ ASPECTS = {
 
 LONG_SIDE = 1600          # cap on the generated canvas's longer side
 MAX_MARGIN = 1.5          # cap each side's drag at 150% of the dimension
+STEP = 0.4                # max fraction of a dimension the model invents per call
+MAX_STEPS = 8             # safety cap on the stepwise loop
 
 EXPAND_PROMPT = """Outpaint this image to fill the whole frame. The center is a \
 real photo; the soft, blurred areas around it are a rough guide for empty canvas \
@@ -72,10 +74,27 @@ def _mirror_fill(orig, cw, ch, ox, oy):
     return canvas
 
 
-def _generate(orig, cw, ch, ox, oy, long_side):
-    """Mirror-fill the expansion area, let the model outpaint it seamlessly, and
-    return the result downscaled to `long_side` as JPEG bytes."""
-    canvas = _mirror_fill(orig, cw, ch, ox, oy)
+def _fit_long_side(img, long_side):
+    """Downscale so the longer side is at most `long_side` (no upscaling)."""
+    w, h = img.size
+    if max(w, h) <= long_side:
+        return img
+    if w >= h:
+        return img.resize((long_side, round(h * long_side / w)))
+    return img.resize((round(w * long_side / h), long_side))
+
+
+def _outpaint_step(base, add_l, add_r, add_t, add_b):
+    """One model call: grow `base` by the given per-side pixel margins.
+
+    The mirror-filled margins are small (capped by STEP), so the model only ever
+    has to invent a thin band it can keep fully in focus — which is what stops
+    the soft/blurred edges that large single-shot fills produce."""
+    w, h = base.size
+    cw, ch = w + add_l + add_r, h + add_t + add_b
+    if (cw, ch) == (w, h):
+        return base
+    canvas = _mirror_fill(base, cw, ch, add_l, add_t)
     buf = io.BytesIO()
     canvas.save(buf, format="JPEG", quality=92)
 
@@ -94,17 +113,40 @@ def _generate(orig, cw, ch, ox, oy, long_side):
 
     # The model output is internally seamless; compositing the original back
     # over it re-introduces a visible tone-step band, so we trust the model's
-    # frame (the prompt pins the central subject to stay unchanged).
-    result = Image.open(io.BytesIO(out)).convert("RGB").resize((cw, ch))
+    # frame (the prompt pins the central subject to stay unchanged). The model
+    # may return a slightly different resolution, so pin it to this step's canvas.
+    return Image.open(io.BytesIO(out)).convert("RGB").resize((cw, ch))
 
-    if max(cw, ch) > long_side:
-        if cw >= ch:
-            result = result.resize((long_side, round(ch * long_side / cw)))
-        else:
-            result = result.resize((round(cw * long_side / ch), long_side))
+
+def _generate(orig, cw, ch, ox, oy, long_side):
+    """Reach the target canvas through capped steps, then return JPEG bytes.
+
+    Each step adds at most STEP of the current dimension per side and feeds the
+    model's own sharp output back as the base for the next step. This keeps every
+    fill band small enough for the model to repaint fully in focus, instead of
+    asking it to invent a large region in one shot (which left soft edges)."""
+    w0, h0 = orig.size
+    rem_l, rem_r = float(ox), float(cw - w0 - ox)
+    rem_t, rem_b = float(oy), float(ch - h0 - oy)
+
+    cur = orig
+    for _ in range(MAX_STEPS):
+        if max(rem_l, rem_r, rem_t, rem_b) <= 1:
+            break
+        w, h = cur.size
+        sw, sh = w * STEP, h * STEP
+        al, ar = min(rem_l, sw), min(rem_r, sw)
+        at, ab = min(rem_t, sh), min(rem_b, sh)
+        cur = _outpaint_step(cur, round(al), round(ar), round(at), round(ab))
+        rem_l -= al; rem_r -= ar; rem_t -= at; rem_b -= ab
+
+    # Pin to the exact target aspect (absorbs per-step rounding), then downscale.
+    if cur.size != (cw, ch):
+        cur = cur.resize((cw, ch))
+    cur = _fit_long_side(cur, long_side)
 
     out_buf = io.BytesIO()
-    result.save(out_buf, format="JPEG", quality=92)
+    cur.save(out_buf, format="JPEG", quality=92)
     return out_buf.getvalue()
 
 

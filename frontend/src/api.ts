@@ -1,4 +1,32 @@
-const API = "https://video-agent-production-9eb9.up.railway.app";
+// Backend base URL. Override per-deploy by setting VITE_API_URL (e.g. a
+// Hugging Face Space, Render, or Cloud Run URL) in the frontend's env — no code
+// change needed to move the backend. Falls back to the original Railway host.
+const API = (
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  "https://video-agent-production-9eb9.up.railway.app"
+).replace(/\/+$/, "");
+
+// Is the backend reachable? Used to fail fast with a clear message before
+// uploading a whole video to a server that's offline or still starting up.
+export async function checkHealth(timeoutMs = 8000): Promise<boolean> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(`${API}/health`, { signal: ctrl.signal });
+    clearTimeout(t);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// fetch() rejects with a TypeError when the request never reaches the server
+// (offline, DNS/TLS failure, CORS block, connection dropped) — as opposed to an
+// HTTP error status, which resolves normally. Lets us show a connection-specific
+// message instead of the browser's cryptic "Load failed".
+export function isConnectionError(err: unknown): boolean {
+  return err instanceof TypeError;
+}
 
 export interface FrameScores {
   sharpness: number | null;

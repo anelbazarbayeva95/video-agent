@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Upload, RotateCcw, Download, Loader } from "lucide-react";
 import JSZip from "jszip";
-import { buildAssetPack } from "../../api";
+import { buildAssetPack, checkHealth, isConnectionError } from "../../api";
 import type { BestFrame, PackAsset, AssetPackEvent } from "../../api";
 import ProcessingTimeline, { type Step } from "./ProcessingTimeline";
 import AssetPackGrid from "./AssetPackGrid";
@@ -51,15 +51,25 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
 
   const done = stage === "done";
 
-  const start = useCallback(async (f: File) => {
-    setFile(f);
-    setVideoUrl(URL.createObjectURL(f));
+  const OFFLINE_MSG =
+    "Can't reach the Kadr server — it may be offline or starting up. Give it a moment and try again.";
+
+  // Run (or re-run) the pipeline for an already-selected file. Pings the backend
+  // first so a dead server fails fast with a clear message instead of after a
+  // full video upload ends in a cryptic "Load failed".
+  const runPipeline = useCallback(async (f: File) => {
     setFrames([]);
     setAssets([]);
     setError(null);
+    setStatusMsg(null);
     setStage("analyzing");
     setRunning(true);
     try {
+      if (!(await checkHealth())) {
+        setStage(null);
+        setError(OFFLINE_MSG);
+        return;
+      }
       await buildAssetPack(f, (e: AssetPackEvent) => {
         if (e.type === "status") { setStage(e.stage); setStatusMsg(e.message); }
         else if (e.type === "frames") setFrames(e.frames);
@@ -68,11 +78,18 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
         else if (e.type === "error") setError(e.message);
       }, opts);
     } catch (err: any) {
-      setError(err.message);
+      setStage(null);
+      setError(isConnectionError(err) ? OFFLINE_MSG : err?.message || "Something went wrong.");
     } finally {
       setRunning(false);
     }
   }, [opts]);
+
+  const start = useCallback((f: File) => {
+    setFile(f);
+    setVideoUrl(URL.createObjectURL(f));
+    runPipeline(f);
+  }, [runPipeline]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -209,9 +226,17 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
 
               <div className="min-w-0">
                 {error && (
-                  <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                    {error}
-                  </p>
+                  <div className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    <span>{error}</span>
+                    {file && !running && (
+                      <button
+                        onClick={() => runPipeline(file)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-300/40 bg-transparent px-3 py-1.5 text-xs font-medium text-red-100 transition hover:border-red-200/70 hover:text-white"
+                      >
+                        <RotateCcw size={12} /> Retry
+                      </button>
+                    )}
+                  </div>
                 )}
                 <AssetPackGrid frames={frames} assets={assets} framesLoading={running} />
               </div>
