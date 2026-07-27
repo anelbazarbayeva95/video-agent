@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { BestFrame, PackAsset } from "../../api";
+import { selectionTier } from "../../api";
 import AssetCard from "./AssetCard";
 import AssetLightbox, { type PreviewItem } from "./AssetLightbox";
+import SelectionTimeline from "./SelectionTimeline";
 
 interface Props {
   frames: BestFrame[];
@@ -38,6 +40,23 @@ function Section({
   );
 }
 
+// Build the lightbox item for a best frame. Keeps the moment label and the
+// broader scene label as separate fields (they describe different levels of
+// interpretation), and carries the AI `reason` + score-derived tier. All
+// downstream display fields are optional, so older frames without scene/reason
+// still open cleanly.
+function framePreview(f: BestFrame, i: number): PreviewItem {
+  return {
+    url: `data:image/jpeg;base64,${f.image_b64}`,
+    label: f.label || "Moment",       // moment label: why this frame is useful
+    sceneLabel: f.scene?.label,        // broader scene description
+    sublabel: ts(f.timestamp),
+    score: f.score,                    // used only to derive the coarse tier
+    reason: f.reason,                  // Gemini interpretation
+    downloadName: `frame_${i + 1}.jpg`,
+  };
+}
+
 export default function AssetPackGrid({ frames, assets, framesLoading }: Props) {
   const [preview, setPreview] = useState<PreviewItem | null>(null);
   const stickers = assets.filter((a) => a.kind === "sticker");
@@ -48,6 +67,9 @@ export default function AssetPackGrid({ frames, assets, framesLoading }: Props) 
     <div className="space-y-10">
       {/* Best frames / moment map */}
       <Section title="Best Frames" count={frames.length ? `${frames.length}` : undefined}>
+        {frames.length > 0 && (
+          <SelectionTimeline frames={frames} onSelect={(i) => setPreview(framePreview(frames[i], i))} />
+        )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {framesLoading && frames.length === 0
             ? Array.from({ length: 5 }).map((_, i) => (
@@ -55,18 +77,15 @@ export default function AssetPackGrid({ frames, assets, framesLoading }: Props) 
               ))
             : frames.map((f, i) => {
                 const url = `data:image/jpeg;base64,${f.image_b64}`;
-                const label = f.label || f.scene?.label || "Moment";
                 return (
                   <AssetCard
                     key={i}
-                    label={label}
+                    label={f.label || "Moment"}
                     sublabel={ts(f.timestamp)}
-                    score={f.score}
+                    tier={selectionTier(f.score) ?? undefined}
                     imageUrl={url}
                     status="ready"
-                    onOpen={() =>
-                      setPreview({ url, label, sublabel: ts(f.timestamp), score: f.score, downloadName: `frame_${i + 1}.jpg` })
-                    }
+                    onOpen={() => setPreview(framePreview(f, i))}
                     onDownload={() => download(url, `frame_${i + 1}.jpg`)}
                   />
                 );

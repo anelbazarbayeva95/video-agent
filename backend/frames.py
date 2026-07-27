@@ -312,10 +312,13 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         selected = _select_diverse(scenes_frames, count, frame_map)
         selected.sort(key=lambda c: c["score"] or 0, reverse=True)
 
-        # Attach the actual image bytes as base64
+        # Attach the actual image bytes as base64. Also carry the video's total
+        # duration on each frame (additive, optional field) so the frontend can
+        # place a selection timeline without a new event/response shape.
         for entry in selected:
             closest_ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
             entry["image_b64"] = base64.b64encode(frame_map[closest_ts]).decode()
+            entry["duration"] = round(duration, 2)
 
         return selected
 

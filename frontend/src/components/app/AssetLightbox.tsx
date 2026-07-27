@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Download, Sparkles, Loader, RotateCcw, Move, Crop } from "lucide-react";
-import { expandImage, expandMargins, reframe } from "../../api";
+import { expandImage, expandMargins, reframe, selectionTier } from "../../api";
 import type { Aspect } from "../../api";
 
 export interface PreviewItem {
   url: string;
-  label: string;
-  sublabel?: string;
-  score?: number | null;
+  label: string;          // moment label — why this particular frame is useful
+  sublabel?: string;      // timestamp
+  sceneLabel?: string;    // broader scene description (distinct from label)
+  reason?: string;        // Gemini's written interpretation
+  score?: number | null;  // used only to derive the coarse tier; never shown raw
   transparent?: boolean;
   downloadName: string;
 }
+
+const TIER_BADGE: Record<string, string> = {
+  "Top pick": "border-ember/50 bg-ember/15 text-ember",
+  "Strong": "border-white/25 bg-white/10 text-white/85",
+  "Good": "border-white/15 bg-white/5 text-white/65",
+};
 
 // Expand (outpaint) — generative canvas growth. Set to false to hide the
 // Expand controls (Resize stays available); all backend + drag code is intact.
@@ -290,14 +298,30 @@ export default function AssetLightbox({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-[#0d0d0d] px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium text-white">{item.label}</span>
-            {item.score != null && (
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] tabular-nums text-white/70">
-                {item.score}
-              </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-medium text-white">{item.label}</span>
+              {(() => {
+                const tier = selectionTier(item.score);
+                return tier ? (
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${TIER_BADGE[tier]}`}>
+                    {tier}
+                  </span>
+                ) : null;
+              })()}
+              {item.sceneLabel && item.sceneLabel !== item.label && (
+                <span className="text-xs text-white/45">in {item.sceneLabel}</span>
+              )}
+              {item.sublabel && <span className="text-xs text-white/45">· {item.sublabel}</span>}
+            </div>
+            {item.reason && (
+              <p className="mt-1 max-w-prose text-[12px] leading-snug text-white/60">
+                <span className="text-white/40">Why Kadr picked this</span>
+                <span className="text-white/30"> · AI interpretation</span>
+                {" — "}
+                {item.reason}
+              </p>
             )}
-            {item.sublabel && <span className="text-white/55">{item.sublabel}</span>}
           </div>
 
           <div className="flex items-center gap-2">
