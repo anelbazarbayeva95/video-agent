@@ -11,6 +11,7 @@ interface Props {
   status: AssetStatus;
   transparent?: boolean;   // render on a checkerboard (stickers)
   aspect?: string;         // e.g. "16/9", "9/16"
+  selected?: boolean;      // active frame in the inspector
   onDownload?: () => void;
   onOpen?: () => void;
 }
@@ -18,7 +19,7 @@ interface Props {
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function AssetCard({
-  label, sublabel, imageUrl, rank, status, transparent, aspect, onDownload, onOpen,
+  label, sublabel, imageUrl, rank, status, transparent, aspect, selected, onDownload, onOpen,
 }: Props) {
   const reduce = useReducedMotion();
   const openable = status === "ready" && !!imageUrl && !!onOpen;
@@ -29,7 +30,9 @@ export default function AssetCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: EASE }}
       whileHover={reduce ? undefined : { y: -4, scale: 1.015 }}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-2xl"
+      className={`group relative overflow-hidden rounded-2xl border bg-white/[0.04] ${
+        selected ? "border-ember/70 shadow-[0_0_0_2px_#D9873F]" : "border-white/10 shadow-2xl"
+      }`}
     >
       <button
         type="button"

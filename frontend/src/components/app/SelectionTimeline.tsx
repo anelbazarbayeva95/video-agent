@@ -18,9 +18,11 @@ function fmt(t: number) {
 
 export default function SelectionTimeline({
   frames,
+  selected,
   onSelect,
 }: {
   frames: BestFrame[];
+  selected: number;
   onSelect: (i: number) => void;
 }) {
   const stamps = frames.map((f) => f.timestamp).filter((t) => typeof t === "number");
@@ -54,8 +56,15 @@ export default function SelectionTimeline({
               style={{ left: `${pct}%`, border: 0, background: "transparent", padding: 0 }}
               className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
             >
-              {/* filled ember dot with an ink ring so it reads on the track */}
-              <span className="block h-3 w-3 rounded-full bg-ember shadow-[0_0_0_3px_#0B0B0D] transition duration-150 group-hover:scale-150" />
+              {/* filled ember dot with an ink ring so it reads on the track;
+                  the selected marker is larger with a brighter ring */}
+              <span
+                className={`block rounded-full bg-ember transition duration-150 group-hover:scale-150 ${
+                  i === selected
+                    ? "h-4 w-4 shadow-[0_0_0_3px_#0B0B0D,0_0_0_5px_#D9873F]"
+                    : "h-3 w-3 shadow-[0_0_0_3px_#0B0B0D]"
+                }`}
+              />
             </button>
           );
         })}
