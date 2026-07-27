@@ -7,7 +7,7 @@ interface Props {
   label: string;
   sublabel?: string;
   imageUrl?: string;
-  score?: number | null;
+  rank?: number | null;    // selection rank (1 = Kadr's top pick); omit for non-frames
   status: AssetStatus;
   transparent?: boolean;   // render on a checkerboard (stickers)
   aspect?: string;         // e.g. "16/9", "9/16"
@@ -18,7 +18,7 @@ interface Props {
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function AssetCard({
-  label, sublabel, imageUrl, score, status, transparent, aspect, onDownload, onOpen,
+  label, sublabel, imageUrl, rank, status, transparent, aspect, onDownload, onOpen,
 }: Props) {
   const reduce = useReducedMotion();
   const openable = status === "ready" && !!imageUrl && !!onOpen;
@@ -56,9 +56,9 @@ export default function AssetCard({
           <div className={`h-full w-full ${status === "generating" ? "asset-shimmer" : "bg-white/[0.05]"}`} />
         )}
 
-        {score != null && status === "ready" && (
-          <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white">
-            {score}
+        {rank != null && status === "ready" && (
+          <span className={`pointer-events-none absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${rank === 1 ? "bg-ember/90 text-ink" : "bg-black/70 text-white"}`}>
+            #{rank}
           </span>
         )}
 

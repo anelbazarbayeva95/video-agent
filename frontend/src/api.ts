@@ -49,6 +49,7 @@ export interface BestFrame {
   scores?: FrameScores;
   scene?: FrameScene;
   label?: string;
+  duration?: number; // total video length (s); optional — absent on older responses
 }
 
 export async function getBestFrames(

@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import type { BestFrame, PackAsset } from "../../api";
 import AssetCard from "./AssetCard";
 import AssetLightbox, { type PreviewItem } from "./AssetLightbox";
+import SelectionTimeline from "./SelectionTimeline";
 
 interface Props {
   frames: BestFrame[];
@@ -38,6 +39,23 @@ function Section({
   );
 }
 
+// Build the lightbox item for a best frame. Keeps the moment label and the
+// broader scene label as separate fields (they describe different levels of
+// interpretation), and carries the AI `reason` + score-derived tier. All
+// downstream display fields are optional, so older frames without scene/reason
+// still open cleanly.
+function framePreview(f: BestFrame, i: number): PreviewItem {
+  return {
+    url: `data:image/jpeg;base64,${f.image_b64}`,
+    label: f.label || "Moment",       // moment label: why this frame is useful
+    sceneLabel: f.scene?.label,        // broader scene description
+    sublabel: ts(f.timestamp),
+    rank: i + 1,                       // selection rank (frames arrive score-sorted)
+    reason: f.reason,                  // Gemini interpretation
+    downloadName: `frame_${i + 1}.jpg`,
+  };
+}
+
 export default function AssetPackGrid({ frames, assets, framesLoading }: Props) {
   const [preview, setPreview] = useState<PreviewItem | null>(null);
   const stickers = assets.filter((a) => a.kind === "sticker");
@@ -55,23 +73,24 @@ export default function AssetPackGrid({ frames, assets, framesLoading }: Props) 
               ))
             : frames.map((f, i) => {
                 const url = `data:image/jpeg;base64,${f.image_b64}`;
-                const label = f.label || f.scene?.label || "Moment";
                 return (
                   <AssetCard
                     key={i}
-                    label={label}
+                    label={f.label || "Moment"}
                     sublabel={ts(f.timestamp)}
-                    score={f.score}
+                    rank={i + 1}
                     imageUrl={url}
                     status="ready"
-                    onOpen={() =>
-                      setPreview({ url, label, sublabel: ts(f.timestamp), score: f.score, downloadName: `frame_${i + 1}.jpg` })
-                    }
+                    onOpen={() => setPreview(framePreview(f, i))}
                     onDownload={() => download(url, `frame_${i + 1}.jpg`)}
                   />
                 );
               })}
         </div>
+        {/* Timeline sits below the cards — it supports them, not competes. */}
+        {frames.length > 0 && (
+          <SelectionTimeline frames={frames} onSelect={(i) => setPreview(framePreview(frames[i], i))} />
+        )}
       </Section>
 
       {/* Stickers */}
