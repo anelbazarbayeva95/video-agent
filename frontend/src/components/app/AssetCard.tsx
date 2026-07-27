@@ -7,7 +7,7 @@ interface Props {
   label: string;
   sublabel?: string;
   imageUrl?: string;
-  tier?: string | null;    // coarse selection tier (e.g. "Top pick") — not a raw score
+  rank?: number | null;    // selection rank (1 = Kadr's top pick); omit for non-frames
   status: AssetStatus;
   transparent?: boolean;   // render on a checkerboard (stickers)
   aspect?: string;         // e.g. "16/9", "9/16"
@@ -17,14 +17,8 @@ interface Props {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const TIER_BADGE: Record<string, string> = {
-  "Top pick": "bg-ember/85 text-ink",
-  "Strong": "bg-black/70 text-white",
-  "Good": "bg-black/60 text-white/80",
-};
-
 export default function AssetCard({
-  label, sublabel, imageUrl, tier, status, transparent, aspect, onDownload, onOpen,
+  label, sublabel, imageUrl, rank, status, transparent, aspect, onDownload, onOpen,
 }: Props) {
   const reduce = useReducedMotion();
   const openable = status === "ready" && !!imageUrl && !!onOpen;
@@ -62,9 +56,9 @@ export default function AssetCard({
           <div className={`h-full w-full ${status === "generating" ? "asset-shimmer" : "bg-white/[0.05]"}`} />
         )}
 
-        {tier && status === "ready" && (
-          <span className={`pointer-events-none absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${TIER_BADGE[tier] ?? "bg-black/65 text-white"}`}>
-            {tier}
+        {rank != null && status === "ready" && (
+          <span className={`pointer-events-none absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${rank === 1 ? "bg-ember/90 text-ink" : "bg-black/70 text-white"}`}>
+            #{rank}
           </span>
         )}
 

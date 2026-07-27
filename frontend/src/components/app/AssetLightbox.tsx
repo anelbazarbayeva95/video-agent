@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Download, Sparkles, Loader, RotateCcw, Move, Crop } from "lucide-react";
-import { expandImage, expandMargins, reframe, selectionTier } from "../../api";
+import { expandImage, expandMargins, reframe } from "../../api";
 import type { Aspect } from "../../api";
 
 export interface PreviewItem {
@@ -10,16 +10,10 @@ export interface PreviewItem {
   sublabel?: string;      // timestamp
   sceneLabel?: string;    // broader scene description (distinct from label)
   reason?: string;        // Gemini's written interpretation
-  score?: number | null;  // used only to derive the coarse tier; never shown raw
+  rank?: number;          // selection rank (1 = top pick); omit for non-frames
   transparent?: boolean;
   downloadName: string;
 }
-
-const TIER_BADGE: Record<string, string> = {
-  "Top pick": "border-ember/50 bg-ember/15 text-ember",
-  "Strong": "border-white/25 bg-white/10 text-white/85",
-  "Good": "border-white/15 bg-white/5 text-white/65",
-};
 
 // Expand (outpaint) — generative canvas growth. Set to false to hide the
 // Expand controls (Resize stays available); all backend + drag code is intact.
@@ -301,14 +295,11 @@ export default function AssetLightbox({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-medium text-white">{item.label}</span>
-              {(() => {
-                const tier = selectionTier(item.score);
-                return tier ? (
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${TIER_BADGE[tier]}`}>
-                    {tier}
-                  </span>
-                ) : null;
-              })()}
+              {item.rank != null && (
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${item.rank === 1 ? "bg-ember/90 text-ink" : "bg-white/10 text-white/85"}`}>
+                  #{item.rank}
+                </span>
+              )}
               {item.sceneLabel && item.sceneLabel !== item.label && (
                 <span className="text-xs text-white/45">in {item.sceneLabel}</span>
               )}

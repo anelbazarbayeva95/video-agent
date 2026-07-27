@@ -52,18 +52,6 @@ export interface BestFrame {
   duration?: number; // total video length (s); optional — absent on older responses
 }
 
-// Coarse selection tier derived from the overall score. We deliberately show
-// this instead of a raw 0-100, which is a single non-deterministic Gemini
-// judgment and would imply precision the pipeline doesn't support. Returns null
-// when no score is present (non-frame assets), so callers can omit the badge.
-export type SelectionTier = "Top pick" | "Strong" | "Good";
-export function selectionTier(score?: number | null): SelectionTier | null {
-  if (score == null) return null;
-  if (score >= 85) return "Top pick";
-  if (score >= 70) return "Strong";
-  return "Good";
-}
-
 export async function getBestFrames(
   file: File,
   prompt?: string,
