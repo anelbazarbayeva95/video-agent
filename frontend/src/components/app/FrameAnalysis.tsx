@@ -1,13 +1,14 @@
-import { Sparkles, Download, Wand2 } from "lucide-react";
+import { Sparkles, Download, Wand2, Check } from "lucide-react";
 import type { BestFrame } from "../../api";
 import { FRAME_EDITOR } from "../../features";
 
-// Full-width inline analysis panel for the selected frame. Section order is
-// fixed so deterministic CV metrics (Slice 2) drop into the reserved "Measured
-// metrics" slot without a redesign. We deliberately do NOT show invented
-// numeric scores (sharpness/smile/etc.) or confidence percentages here — those
-// require the measured-metrics work and would otherwise imply precision the
-// pipeline can't back up.
+// Full-width inline analysis panel for the selected frame.
+//
+// Two clearly-separated kinds of information:
+//  - "Why Kadr picked this" = Gemini's subjective interpretation (labeled AI).
+//  - "Measured metrics" = deterministic values computed from the pixels
+//    (pure Pillow on the backend). We never invent numbers; the metric section
+//    only renders when the backend supplied real values.
 function ts(t?: number) {
   if (t == null) return "—";
   const m = Math.floor(t / 60);
@@ -15,7 +16,22 @@ function ts(t?: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-const PENDING_METRICS = ["Sharpness", "Blur", "Exposure", "Subject area", "Uniqueness"];
+function exposureLabel(v: number) {
+  return v < 60 ? "Dark" : v > 200 ? "Bright" : "Balanced";
+}
+
+function MetricBar({ label, value }: { label: string; value: number }) {
+  const w = Math.max(0, Math.min(100, value));
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-24 shrink-0 text-[11px] text-white/45">{label}</span>
+      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+        <span className="block h-full rounded-full bg-ember" style={{ width: `${w}%` }} />
+      </span>
+      <span className="w-7 shrink-0 text-right text-[11px] tabular-nums text-white/60">{value}</span>
+    </div>
+  );
+}
 
 export default function FrameAnalysis({
   frame,
@@ -38,6 +54,8 @@ export default function FrameAnalysis({
     );
   }
 
+  const metrics = frame.metrics;
+
   return (
     <div className="rounded-2xl border border-white/10 bg-ash p-6">
       <div className="mb-4 flex items-center gap-3">
@@ -51,7 +69,7 @@ export default function FrameAnalysis({
       </div>
 
       <div className="grid gap-6 md:grid-cols-[1.6fr_1fr]">
-        {/* Why — the real, explainable payoff */}
+        {/* Why — Gemini's subjective read */}
         <div>
           <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-white/45">
             <Sparkles size={12} /> Why Kadr picked this
@@ -73,21 +91,38 @@ export default function FrameAnalysis({
           </div>
         </div>
 
-        {/* Measured metrics — reserved for Slice 2 (deterministic CV) */}
-        <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.02] p-4">
+        {/* Measured metrics — deterministic, computed from the pixels */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
           <p className="text-[11px] uppercase tracking-[0.14em] text-white/45">Measured metrics</p>
-          <p className="mt-1 text-[11px] text-white/35">
-            Deterministic scores, computed from the pixels — coming in the analysis upgrade.
-          </p>
-          <div className="mt-3 space-y-2">
-            {PENDING_METRICS.map((m) => (
-              <div key={m} className="flex items-center gap-3">
-                <span className="w-24 shrink-0 text-[11px] text-white/45">{m}</span>
-                <span className="h-1.5 flex-1 rounded-full bg-white/[0.06]" />
-                <span className="text-[11px] text-white/25">—</span>
+          {metrics ? (
+            <>
+              <p className="mt-0.5 text-[11px] text-white/35">
+                Computed from the pixels · sharpness is relative to this clip.
+              </p>
+              <div className="mt-3 space-y-2.5">
+                <MetricBar label="Sharpness" value={metrics.sharpness} />
+                <MetricBar label="Distinctness" value={metrics.uniqueness} />
+                <div className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 text-[11px] text-white/45">Exposure</span>
+                  <span className="flex-1 text-[11px] text-white/70">
+                    {exposureLabel(metrics.exposure)}
+                    <span className="text-white/40"> · {metrics.exposure}/255</span>
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
+              {frame.evidence && frame.evidence.length > 0 && (
+                <ul className="mt-3 space-y-1 border-t border-white/[0.08] pt-3 text-[11px] leading-relaxed text-white/60">
+                  {frame.evidence.map((e, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <Check size={12} className="mt-0.5 shrink-0 text-ember" /> {e}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <p className="mt-2 text-[11px] text-white/35">Not available for this result.</p>
+          )}
         </div>
       </div>
 

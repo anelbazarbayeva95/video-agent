@@ -6,7 +6,7 @@ import base64
 import json
 import tempfile
 import ffmpeg
-from PIL import Image
+from PIL import Image, ImageFilter, ImageStat
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -37,6 +37,19 @@ def _signature(jpeg_bytes: bytes) -> tuple[int, tuple[int, int, int]]:
         if p > avg:
             bits |= 1 << i
     return bits, mean
+
+
+def _cv_metrics(jpeg_bytes: bytes) -> dict:
+    """Deterministic, pixel-based metrics — pure Pillow, no extra dependencies.
+
+    sharpness_raw = variance of the Laplacian (a standard focus/blur measure;
+    higher = sharper). exposure = mean luminance 0-255."""
+    im = Image.open(io.BytesIO(jpeg_bytes)).convert("L")
+    lap = im.filter(ImageFilter.Kernel((3, 3), [0, 1, 0, 1, -4, 1, 0, 1, 0], scale=1))
+    return {
+        "sharpness_raw": ImageStat.Stat(lap).var[0],
+        "exposure": ImageStat.Stat(im).mean[0],
+    }
 
 
 def _is_duplicate(sig, seen: list) -> bool:
@@ -320,14 +333,55 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         selected = _select_diverse(scenes_frames, count, frame_map)
         selected.sort(key=lambda c: c["score"] or 0, reverse=True)
 
-        # Attach the actual image bytes as base64. Also carry the video's total
-        # duration on each frame (additive, optional field) so the frontend can
-        # place a selection timeline without a new event/response shape.
+        # Deterministic metrics (pure Pillow) + grounded evidence, computed over
+        # the selected set so sharpness reads relative to this clip and
+        # uniqueness relative to the other picks. Also attach image bytes and the
+        # video-level fields (duration, frames analyzed).
+        jbs, raws, hashes = [], [], []
         for entry in selected:
             closest_ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
-            entry["image_b64"] = base64.b64encode(frame_map[closest_ts]).decode()
+            jb = frame_map[closest_ts]
+            jbs.append(jb)
+            raws.append(_cv_metrics(jb))
+            hashes.append(_signature(jb)[0])
+
+        sharps = [m["sharpness_raw"] for m in raws]
+        smin, smax = (min(sharps), max(sharps)) if sharps else (0, 0)
+
+        def _norm(v, lo, hi):
+            return 100 if hi <= lo else round((v - lo) / (hi - lo) * 100)
+
+        for i, entry in enumerate(selected):
+            m = raws[i]
+            exposure = round(m["exposure"])
+            others = [h for j, h in enumerate(hashes) if j != i]
+            uniq = min((bin(hashes[i] ^ o).count("1") for o in others), default=64)  # 0-64
+
+            evidence = []
+            if len(selected) > 1 and m["sharpness_raw"] == smax:
+                evidence.append("Sharpest of the selected frames")
+            if exposure < 60:
+                evidence.append(f"Dark exposure (avg brightness {exposure}/255)")
+            elif exposure > 200:
+                evidence.append(f"Bright, near-blown exposure (avg {exposure}/255)")
+            else:
+                evidence.append(f"Well-balanced exposure (avg {exposure}/255)")
+            if len(selected) > 1:
+                if uniq >= 20:
+                    evidence.append("Visually distinct from the other picks")
+                elif uniq <= 8:
+                    evidence.append("Similar framing to another pick")
+
+            entry["image_b64"] = base64.b64encode(jbs[i]).decode()
             entry["duration"] = round(duration, 2)
-            entry["analyzed"] = len(raw_frames)  # frames sampled + scored
+            entry["analyzed"] = len(raw_frames)
+            entry["metrics"] = {
+                "sharpness": _norm(m["sharpness_raw"], smin, smax),  # 0-100 relative to clip
+                "sharpnessRaw": round(m["sharpness_raw"]),
+                "exposure": exposure,                                 # 0-255 mean luminance
+                "uniqueness": round(uniq / 64 * 100),                 # 0-100 distinctness
+            }
+            entry["evidence"] = evidence
 
         return selected
 
