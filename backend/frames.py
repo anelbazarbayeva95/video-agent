@@ -6,7 +6,7 @@ import base64
 import json
 import tempfile
 import ffmpeg
-from PIL import Image
+from PIL import Image, ImageFilter, ImageStat
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -37,6 +37,19 @@ def _signature(jpeg_bytes: bytes) -> tuple[int, tuple[int, int, int]]:
         if p > avg:
             bits |= 1 << i
     return bits, mean
+
+
+def _cv_metrics(jpeg_bytes: bytes) -> dict:
+    """Deterministic, pixel-based metrics — pure Pillow, no extra dependencies.
+
+    sharpness_raw = variance of the Laplacian (a standard focus/blur measure;
+    higher = sharper). exposure = mean luminance 0-255."""
+    im = Image.open(io.BytesIO(jpeg_bytes)).convert("L")
+    lap = im.filter(ImageFilter.Kernel((3, 3), [0, 1, 0, 1, -4, 1, 0, 1, 0], scale=1))
+    return {
+        "sharpness_raw": ImageStat.Stat(lap).var[0],
+        "exposure": ImageStat.Stat(im).mean[0],
+    }
 
 
 def _is_duplicate(sig, seen: list) -> bool:
@@ -99,10 +112,11 @@ def _select_diverse(scenes_frames: list[list[dict]], count: int,
         round_idx += 1
     return selected
 
-FRAME_PROMPT = """You are a visual quality expert. You are given frames from a video, each labeled with its timestamp.
+FRAME_PROMPT_HEAD = """You are a visual quality expert. You are given frames from a video, each labeled with its timestamp.
 
 First, group the frames into scenes — contiguous stretches showing the same shot, setting, or action.
-Then, for each scene, select the top 1-3 candidate frames that would work as a thumbnail, social post image, or hero photo.
+Then select the strongest candidate frames that would work as a thumbnail, social post image, or hero photo.
+Aim to surface about {count} visually DISTINCT strong frames in total across the whole video — a single scene may contribute several frames when they differ meaningfully (different composition, subject, expression, or moment). Return fewer than {count} only if the video genuinely lacks that many good, different moments; never pad the list with near-duplicates of a frame you already chose.
 Prioritize: sharp focus, good composition, faces clearly visible and expressive, good lighting, no motion blur, visually interesting moments.
 
 Score every selected frame on these criteria, each 0-100:
@@ -110,8 +124,9 @@ Score every selected frame on these criteria, each 0-100:
 - face: how clearly visible, well-lit, and expressive faces are (null if no face in frame — do not penalize scenic shots)
 - composition: framing, balance, lighting, visual interest
 - score: overall quality as a standalone image, considering everything above
+"""
 
-Return ONLY valid JSON with this structure:
+FRAME_PROMPT_SCHEMA = """Return ONLY valid JSON with this structure:
 {
   "scenes": [
     {
@@ -133,6 +148,12 @@ Return ONLY valid JSON with this structure:
 }
 
 Order scenes chronologically, and frames within each scene from best to least good."""
+
+
+def frame_prompt(count: int) -> str:
+    """Build the scoring prompt, asking the model to aim for `count` distinct
+    strong frames so a high requested count actually yields more candidates."""
+    return FRAME_PROMPT_HEAD.format(count=count) + "\n" + FRAME_PROMPT_SCHEMA
 
 
 def _stderr_tail(e: ffmpeg.Error) -> str:
@@ -258,9 +279,9 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         for ts, frame_bytes in raw_frames:
             contents.append(types.Part.from_text(text=f"[Frame at {ts:.1f}s]"))
             contents.append(types.Part.from_bytes(data=frame_bytes, mime_type="image/jpeg"))
-        final_prompt = FRAME_PROMPT
+        final_prompt = frame_prompt(count)
         if custom_prompt:
-            final_prompt = f"User's preference: {custom_prompt}\n\n{FRAME_PROMPT}"
+            final_prompt = f"User's preference: {custom_prompt}\n\n{final_prompt}"
         contents.append(types.Part.from_text(text=final_prompt))
 
         response = client.models.generate_content(
@@ -312,13 +333,55 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         selected = _select_diverse(scenes_frames, count, frame_map)
         selected.sort(key=lambda c: c["score"] or 0, reverse=True)
 
-        # Attach the actual image bytes as base64. Also carry the video's total
-        # duration on each frame (additive, optional field) so the frontend can
-        # place a selection timeline without a new event/response shape.
+        # Deterministic metrics (pure Pillow) + grounded evidence, computed over
+        # the selected set so sharpness reads relative to this clip and
+        # uniqueness relative to the other picks. Also attach image bytes and the
+        # video-level fields (duration, frames analyzed).
+        jbs, raws, hashes = [], [], []
         for entry in selected:
             closest_ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
-            entry["image_b64"] = base64.b64encode(frame_map[closest_ts]).decode()
+            jb = frame_map[closest_ts]
+            jbs.append(jb)
+            raws.append(_cv_metrics(jb))
+            hashes.append(_signature(jb)[0])
+
+        sharps = [m["sharpness_raw"] for m in raws]
+        smin, smax = (min(sharps), max(sharps)) if sharps else (0, 0)
+
+        def _norm(v, lo, hi):
+            return 100 if hi <= lo else round((v - lo) / (hi - lo) * 100)
+
+        for i, entry in enumerate(selected):
+            m = raws[i]
+            exposure = round(m["exposure"])
+            others = [h for j, h in enumerate(hashes) if j != i]
+            uniq = min((bin(hashes[i] ^ o).count("1") for o in others), default=64)  # 0-64
+
+            evidence = []
+            if len(selected) > 1 and m["sharpness_raw"] == smax:
+                evidence.append("Sharpest of the selected frames")
+            if exposure < 60:
+                evidence.append(f"Dark exposure (avg brightness {exposure}/255)")
+            elif exposure > 200:
+                evidence.append(f"Bright, near-blown exposure (avg {exposure}/255)")
+            else:
+                evidence.append(f"Well-balanced exposure (avg {exposure}/255)")
+            if len(selected) > 1:
+                if uniq >= 20:
+                    evidence.append("Visually distinct from the other picks")
+                elif uniq <= 8:
+                    evidence.append("Similar framing to another pick")
+
+            entry["image_b64"] = base64.b64encode(jbs[i]).decode()
             entry["duration"] = round(duration, 2)
+            entry["analyzed"] = len(raw_frames)
+            entry["metrics"] = {
+                "sharpness": _norm(m["sharpness_raw"], smin, smax),  # 0-100 relative to clip
+                "sharpnessRaw": round(m["sharpness_raw"]),
+                "exposure": exposure,                                 # 0-255 mean luminance
+                "uniqueness": round(uniq / 64 * 100),                 # 0-100 distinctness
+            }
+            entry["evidence"] = evidence
 
         return selected
 

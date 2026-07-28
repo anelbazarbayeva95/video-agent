@@ -7,15 +7,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Frame Noir brand tokens
-        ink: "#0B0B0D",
-        ash: "#151519",
-        bone: "#EDE8DF",
-        ember: "#D9873F",
+        // Light theme. Semantic roles: ink = canvas (white) & text-on-accent;
+        // bone = body text / borders (dark); ember = primary accent (near-black
+        // CTAs); electric = the single signature colour, reserved for ranking.
+        ink: "#FFFFFF",       // canvas / text on dark accents
+        ash: "#F4F4F5",       // cards / panels
+        bone: "#1C1C1F",      // body text & borders (dark)
+        ember: "#111114",     // primary accent — near-black CTAs
+        electric: "#2E6BFF",  // signature — ranking
+        muted: "#71717A",     // secondary text
         // legacy aliases
-        "k-bg": "#0B0B0D",
-        "k-panel": "#151519",
-        "k-card": "#151519",
+        "k-bg": "#FFFFFF",
+        "k-panel": "#F4F4F5",
+        "k-card": "#F4F4F5",
       },
       transitionTimingFunction: {
         "k-ease": "cubic-bezier(0.22, 1, 0.36, 1)",

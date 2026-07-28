@@ -41,6 +41,14 @@ export interface FrameScene {
   end: number | null;
 }
 
+// Deterministic, pixel-computed metrics (pure Pillow on the backend).
+export interface FrameMetrics {
+  sharpness: number;    // 0-100, relative to the other frames in this clip
+  sharpnessRaw: number; // raw variance-of-Laplacian
+  exposure: number;     // mean luminance, 0-255
+  uniqueness: number;   // 0-100 distinctness from the other picks
+}
+
 export interface BestFrame {
   timestamp: number;
   reason: string;
@@ -50,6 +58,9 @@ export interface BestFrame {
   scene?: FrameScene;
   label?: string;
   duration?: number; // total video length (s); optional — absent on older responses
+  analyzed?: number; // frames sampled + scored; optional
+  metrics?: FrameMetrics; // deterministic CV metrics; optional
+  evidence?: string[];    // grounded, measured evidence bullets; optional
 }
 
 export async function getBestFrames(

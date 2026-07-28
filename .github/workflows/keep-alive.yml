@@ -1,0 +1,22 @@
+name: Keep Render awake
+
+# Pings the backend so Render's free instance doesn't spin down — a cold start
+# adds ~50s on the next visit, which is bad for a portfolio link.
+#
+# Caveats: GitHub's scheduled runs are best-effort (can be delayed, and are
+# auto-disabled after 60 days of repo inactivity), and only free on PUBLIC
+# repos — private repos consume Actions minutes. For the most reliable
+# always-on, use an external pinger (e.g. UptimeRobot, every 5 min) or Render's
+# paid tier. This workflow is a zero-account fallback.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every ~10 min (Render sleeps after 15 min idle)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: curl -fsS --max-time 90 https://kadr-api.onrender.com/health || true

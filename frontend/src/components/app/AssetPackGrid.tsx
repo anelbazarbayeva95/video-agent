@@ -3,7 +3,6 @@ import { AnimatePresence } from "framer-motion";
 import type { BestFrame, PackAsset } from "../../api";
 import AssetCard from "./AssetCard";
 import AssetLightbox, { type PreviewItem } from "./AssetLightbox";
-import SelectionTimeline from "./SelectionTimeline";
 
 interface Props {
   frames: BestFrame[];
@@ -87,10 +86,6 @@ export default function AssetPackGrid({ frames, assets, framesLoading }: Props) 
                 );
               })}
         </div>
-        {/* Timeline sits below the cards — it supports them, not competes. */}
-        {frames.length > 0 && (
-          <SelectionTimeline frames={frames} onSelect={(i) => setPreview(framePreview(frames[i], i))} />
-        )}
       </Section>
 
       {/* Stickers */}
