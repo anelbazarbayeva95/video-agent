@@ -4,8 +4,8 @@
 export function KadrMark({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 58 58" fill="none" aria-hidden="true">
-      <rect x="8" y="6" width="10" height="46" rx="2" fill="#FAFAFA" />
-      <path d="M46 6 24 29l22 23h-13L18 33v-8L33 6z" fill="#3D7BFF" />
+      <rect x="8" y="6" width="10" height="46" rx="2" fill="#111114" />
+      <path d="M46 6 24 29l22 23h-13L18 33v-8L33 6z" fill="#2E6BFF" />
     </svg>
   );
 }
