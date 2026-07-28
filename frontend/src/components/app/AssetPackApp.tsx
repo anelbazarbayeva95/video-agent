@@ -222,7 +222,9 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                     ref={videoRef}
                     src={videoUrl}
                     controls
-                    className="w-full rounded-2xl border border-bone/10 bg-black"
+                    // Fill the column for landscape, but cap height so a vertical
+                    // clip doesn't become a giant tower; both maxes preserve aspect.
+                    className="mx-auto block max-h-[70vh] max-w-full rounded-2xl border border-bone/10 bg-black"
                   />
                 )}
                 {running && (
