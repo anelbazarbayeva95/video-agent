@@ -167,7 +167,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                   Kadr understands every frame, ranks the best moments, and explains why.
                 </p>
               </div>
-              <span className="mt-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-[#E4E4E7]">
+              <span className="mt-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-[#26262B]">
                 Choose Video
               </span>
               <input
@@ -240,12 +240,12 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                   </div>
                 )}
                 {error && (
-                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                     <span>{error}</span>
                     {file && !running && (
                       <button
                         onClick={() => analyze(file)}
-                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-300/40 bg-transparent px-3 py-1.5 text-xs font-medium text-red-100 transition hover:border-red-200/70 hover:text-white"
+                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-300 bg-transparent px-3 py-1.5 text-xs font-medium text-red-700 transition hover:border-red-500 hover:text-red-900"
                       >
                         <RotateCcw size={12} /> Retry
                       </button>

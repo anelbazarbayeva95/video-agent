@@ -193,7 +193,7 @@ export default function AssetLightbox({
   };
 
   const handleCls =
-    "absolute z-20 rounded-full border-2 border-ember bg-ink shadow-lg touch-none";
+    "absolute z-20 rounded-full border-2 border-electric bg-ink shadow-lg touch-none";
 
   return (
     <motion.div
@@ -238,7 +238,7 @@ export default function AssetLightbox({
               }}
             >
               {anyMargin && (
-                <div className="pointer-events-none absolute inset-0 rounded-md border-2 border-dashed border-ember/70 bg-ember/10" />
+                <div className="pointer-events-none absolute inset-0 rounded-md border-2 border-dashed border-electric/70 bg-electric/10" />
               )}
               <img
                 ref={imgRef}
@@ -328,7 +328,7 @@ export default function AssetLightbox({
                 <button
                   onClick={generateCustom}
                   disabled={!!expanding || !anyMargin}
-                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7] disabled:opacity-40"
+                  className="flex items-center gap-2 rounded-full bg-electric px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#5C93FF] disabled:opacity-40"
                 >
                   <Sparkles size={14} /> Generate
                 </button>
@@ -345,7 +345,7 @@ export default function AssetLightbox({
                       title="Undo — back to the original frame"
                       className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                         active === null
-                          ? "border-ember bg-ember/15 text-ember"
+                          ? "border-electric bg-electric/15 text-electric"
                           : "border-white/25 bg-white/5 text-white/85 hover:border-white/45 hover:text-white"
                       }`}
                     >
@@ -364,8 +364,8 @@ export default function AssetLightbox({
                             disabled={busy}
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                               active === `expand:${a}`
-                                ? "border-ember bg-ember/15 text-ember"
-                                : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                                ? "border-electric bg-electric/15 text-electric"
+                                : "border-white/15 bg-transparent text-white/80 hover:border-electric hover:text-white"
                             }`}
                           >
                             {a}
@@ -377,8 +377,8 @@ export default function AssetLightbox({
                           title="Drag edges to expand freely"
                           className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                             active === "expand:custom"
-                              ? "border-ember bg-ember/15 text-ember"
-                              : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                              ? "border-electric bg-electric/15 text-electric"
+                              : "border-white/15 bg-transparent text-white/80 hover:border-electric hover:text-white"
                           }`}
                         >
                           <Move size={11} /> Custom
@@ -397,8 +397,8 @@ export default function AssetLightbox({
                         disabled={busy}
                         className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
                           active === `resize:${a}`
-                            ? "border-ember bg-ember/15 text-ember"
-                            : "border-white/15 bg-transparent text-white/80 hover:border-ember hover:text-white"
+                            ? "border-electric bg-electric/15 text-electric"
+                            : "border-white/15 bg-transparent text-white/80 hover:border-electric hover:text-white"
                         }`}
                       >
                         {a}
@@ -408,7 +408,7 @@ export default function AssetLightbox({
                 )}
                 <button
                   onClick={download}
-                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
+                  className="flex items-center gap-2 rounded-full bg-electric px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#5C93FF]"
                 >
                   <Download size={14} /> Download
                 </button>

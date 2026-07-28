@@ -27,8 +27,8 @@ export default function RankedFrames({
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-3">
-        <h3 className="text-xs uppercase tracking-[0.18em] text-white/60">Best Frames</h3>
-        {frames.length > 0 && <span className="text-[11px] text-white/55">{frames.length} ranked</span>}
+        <h3 className="text-xs uppercase tracking-[0.18em] text-bone/60">Best Frames</h3>
+        {frames.length > 0 && <span className="text-[11px] text-bone/55">{frames.length} ranked</span>}
       </div>
       <div className="grid grid-cols-2 gap-3">
         {loading && frames.length === 0

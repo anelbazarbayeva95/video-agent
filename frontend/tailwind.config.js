@@ -7,19 +7,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Cinematic mono palette. Accent is white (CTAs); electric blue is the
-        // single signature colour, reserved for the ranking (logo, #1 badge,
-        // metric bars, selected ring).
-        ink: "#090909",       // canvas
-        ash: "#111111",       // cards / panels
-        bone: "#EDEDED",      // body text (cool near-white)
-        ember: "#FFFFFF",     // primary accent — kept name to avoid churn
-        electric: "#3D7BFF",  // signature — ranking
-        muted: "#A1A1AA",     // secondary text
+        // Light theme. Semantic roles: ink = canvas (white) & text-on-accent;
+        // bone = body text / borders (dark); ember = primary accent (near-black
+        // CTAs); electric = the single signature colour, reserved for ranking.
+        ink: "#FFFFFF",       // canvas / text on dark accents
+        ash: "#F4F4F5",       // cards / panels
+        bone: "#1C1C1F",      // body text & borders (dark)
+        ember: "#111114",     // primary accent — near-black CTAs
+        electric: "#2E6BFF",  // signature — ranking
+        muted: "#71717A",     // secondary text
         // legacy aliases
-        "k-bg": "#090909",
-        "k-panel": "#111111",
-        "k-card": "#111111",
+        "k-bg": "#FFFFFF",
+        "k-panel": "#F4F4F5",
+        "k-card": "#F4F4F5",
       },
       transitionTimingFunction: {
         "k-ease": "cubic-bezier(0.22, 1, 0.36, 1)",

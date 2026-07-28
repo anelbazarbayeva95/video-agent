@@ -55,7 +55,7 @@ function Rank({ n }: { n: number }) {
 
 function Timecode({ t }: { t: string }) {
   return (
-    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-px font-mono text-[9px] tracking-wider text-bone/90">
+    <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-px font-mono text-[9px] tracking-wider text-white/90">
       {t}
     </span>
   );
@@ -69,7 +69,7 @@ function HeroMotion() {
       {/* video card */}
       <Float delay={0.05} className="absolute left-[10%] top-0 z-20 w-[80%]">
         <div className={`${card} aspect-video`} style={{ background: G.dusk }}>
-          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-bone">
+          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
             <span className="h-1.5 w-1.5 rounded-full bg-ember" /> Source clip
           </span>
           <Timecode t="00:16" />
@@ -137,7 +137,7 @@ export default function NoirLanding({ onStart }: Props) {
         <KadrWordmark />
         <button
           onClick={onStart}
-          className="rounded-full bg-ember px-5 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
+          className="rounded-full bg-ember px-5 py-2 text-sm font-semibold text-ink transition hover:bg-[#26262B]"
         >
           Get started
         </button>
@@ -152,21 +152,21 @@ export default function NoirLanding({ onStart }: Props) {
             transition={{ duration: 0.7, ease: EASE }}
           >
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">
-              AI video analysis
+              Best-frame intelligence
             </p>
-            <h1 className="max-w-[15ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl" style={{ textWrap: "balance" }}>
-              Find your best frame<span className="text-ember">.</span>
+            <h1 className="max-w-[16ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl" style={{ textWrap: "balance" }}>
+              Find the one frame worth sharing<span className="text-electric">.</span>
             </h1>
             <p className="mt-7 max-w-[46ch] text-lg leading-relaxed text-bone/70 md:text-xl">
-              Upload one video. Kadr understands every frame, ranks the strongest
-              moments, and explains why — so you export the perfect shot.
+              Kadr watches every frame of your video, ranks the strongest moments,
+              and shows you exactly why — so you keep the one shot worth posting.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <button
                 onClick={onStart}
-                className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
+                className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#26262B]"
               >
-                Analyze a video <ArrowRight size={15} />
+                Upload a video <ArrowRight size={15} />
               </button>
               <span className="text-sm text-bone/55">Free · no account needed</span>
             </div>
@@ -230,7 +230,7 @@ export default function NoirLanding({ onStart }: Props) {
           </h2>
           <button
             onClick={onStart}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-4 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-4 text-sm font-semibold text-ink transition hover:bg-[#26262B]"
           >
             Try Kadr free <ArrowRight size={15} />
           </button>

@@ -30,8 +30,8 @@ export default function AssetCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, ease: EASE }}
       whileHover={reduce ? undefined : { y: -4, scale: 1.015 }}
-      className={`group relative overflow-hidden rounded-2xl border bg-white/[0.04] ${
-        selected ? "border-electric/70 shadow-[0_0_0_2px_#3D7BFF]" : "border-white/10 shadow-2xl"
+      className={`group relative overflow-hidden rounded-2xl border bg-bone/[0.04] ${
+        selected ? "border-electric/70 shadow-[0_0_0_2px_#3D7BFF]" : "border-bone/10 shadow-2xl"
       }`}
     >
       <button
@@ -40,7 +40,7 @@ export default function AssetCard({
         aria-label={openable ? `Preview ${label}` : label}
         disabled={!openable}
         className={`relative block w-full overflow-hidden bg-transparent ${
-          transparent ? "sticker-checker" : "bg-white/[0.03]"
+          transparent ? "sticker-checker" : "bg-bone/[0.03]"
         } ${openable ? "cursor-zoom-in" : "cursor-default"}`}
         style={{ aspectRatio: aspect ?? "1 / 1" }}
       >
@@ -52,11 +52,11 @@ export default function AssetCard({
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : status === "error" ? (
-          <div className="flex h-full items-center justify-center text-xs text-red-300/80">
+          <div className="flex h-full items-center justify-center text-xs text-red-600">
             Failed
           </div>
         ) : (
-          <div className={`h-full w-full ${status === "generating" ? "asset-shimmer" : "bg-white/[0.05]"}`} />
+          <div className={`h-full w-full ${status === "generating" ? "asset-shimmer" : "bg-bone/[0.05]"}`} />
         )}
 
         {rank != null && status === "ready" && (
@@ -75,14 +75,14 @@ export default function AssetCard({
       </button>
 
       <div className="flex items-center justify-between gap-2 px-3 py-2">
-        <span className="truncate text-xs font-medium text-white/80">{label}</span>
+        <span className="truncate text-xs font-medium text-bone/80">{label}</span>
         <div className="flex shrink-0 items-center gap-2">
-          {sublabel && <span className="font-mono text-[11px] tabular-nums text-white/60">{sublabel}</span>}
+          {sublabel && <span className="font-mono text-[11px] tabular-nums text-bone/60">{sublabel}</span>}
           {status === "ready" && imageUrl && onDownload && (
             <button
               onClick={onDownload}
               aria-label={`Download ${label}`}
-              className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-transparent text-white/70 transition hover:border-white/25 hover:text-white"
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-bone/10 bg-transparent text-bone/70 transition hover:border-bone/25 hover:text-bone"
             >
               <Download size={12} />
             </button>
