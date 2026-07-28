@@ -167,7 +167,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                   Kadr understands every frame, ranks the best moments, and explains why.
                 </p>
               </div>
-              <span className="mt-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-[#E39A55]">
+              <span className="mt-2 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-ink transition group-hover:bg-[#E4E4E7]">
                 Choose Video
               </span>
               <input

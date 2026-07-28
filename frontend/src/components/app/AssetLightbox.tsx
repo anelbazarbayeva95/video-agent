@@ -296,7 +296,7 @@ export default function AssetLightbox({
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-medium text-white">{item.label}</span>
               {item.rank != null && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${item.rank === 1 ? "bg-ember/90 text-ink" : "bg-white/10 text-white/85"}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${item.rank === 1 ? "bg-electric text-white" : "bg-white/10 text-white/85"}`}>
                   #{item.rank}
                 </span>
               )}
@@ -328,7 +328,7 @@ export default function AssetLightbox({
                 <button
                   onClick={generateCustom}
                   disabled={!!expanding || !anyMargin}
-                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55] disabled:opacity-40"
+                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7] disabled:opacity-40"
                 >
                   <Sparkles size={14} /> Generate
                 </button>
@@ -408,7 +408,7 @@ export default function AssetLightbox({
                 )}
                 <button
                   onClick={download}
-                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+                  className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
                 >
                   <Download size={14} /> Download
                 </button>

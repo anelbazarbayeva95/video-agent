@@ -26,7 +26,7 @@ function MetricBar({ label, value }: { label: string; value: number }) {
     <div className="flex items-center gap-3">
       <span className="w-24 shrink-0 text-[11px] text-white/45">{label}</span>
       <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
-        <span className="block h-full rounded-full bg-ember" style={{ width: `${w}%` }} />
+        <span className="block h-full rounded-full bg-electric" style={{ width: `${w}%` }} />
       </span>
       <span className="w-7 shrink-0 text-right text-[11px] tabular-nums text-white/60">{value}</span>
     </div>
@@ -60,7 +60,7 @@ export default function FrameAnalysis({
     <div className="rounded-2xl border border-white/10 bg-ash p-6">
       <div className="mb-4 flex items-center gap-3">
         <span className="text-xs uppercase tracking-[0.18em] text-white/60">Frame analysis</span>
-        <span className="rounded-full bg-ember/90 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink">
+        <span className="rounded-full bg-electric px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white">
           #{rank}
         </span>
         <span className="text-sm text-white/55">
@@ -130,7 +130,7 @@ export default function FrameAnalysis({
       <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-white/10 pt-5">
         <button
           onClick={onDownload}
-          className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+          className="flex items-center gap-2 rounded-full bg-ember px-4 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
         >
           <Download size={14} /> Export frame
         </button>

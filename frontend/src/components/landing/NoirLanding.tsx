@@ -9,12 +9,12 @@ interface Props {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/* Sunset-film gradients — the amber lives in the "footage", not the chrome */
+/* Cool cinematic gradients — steel, indigo, night. No orange. */
 const G = {
-  dusk: "linear-gradient(180deg,#3a2a44 0%,#7d3b39 46%,#d9873f 72%,#f4b25a 100%)",
-  ember: "linear-gradient(160deg,#241b2e 0%,#8a4436 55%,#e09a4d 100%)",
-  night: "linear-gradient(200deg,#1d2233 0%,#41304e 60%,#96543c 100%)",
-  gold: "linear-gradient(150deg,#2c2030 10%,#a05a35 65%,#f0b264 100%)",
+  dusk: "linear-gradient(180deg,#12131a 0%,#1c2440 46%,#2f4a7a 78%,#4d74b8 100%)",
+  ember: "linear-gradient(160deg,#101018 0%,#232a44 55%,#3d5a8c 100%)",
+  night: "linear-gradient(200deg,#0d0f18 0%,#191f33 60%,#2c3f66 100%)",
+  gold: "linear-gradient(150deg,#141420 10%,#2b2c46 65%,#525a86 100%)",
 };
 
 function Float({
@@ -45,7 +45,7 @@ function Rank({ n }: { n: number }) {
   return (
     <span
       className={`absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[10px] font-bold tabular-nums ${
-        n === 1 ? "bg-ember/90 text-ink" : "bg-black/65 text-white"
+        n === 1 ? "bg-electric text-white" : "bg-black/65 text-white"
       }`}
     >
       #{n}
@@ -96,9 +96,9 @@ function HeroMotion() {
       {/* analysis chip */}
       <Float delay={0.6} className="absolute bottom-[2%] left-1/2 z-30 w-[62%] -translate-x-1/2">
         <div className="rounded-xl border border-bone/10 bg-ash/95 px-3 py-2 shadow-2xl backdrop-blur">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-ember">Why #1</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-electric">Why #1</p>
           <p className="mt-0.5 text-[11px] leading-snug text-bone/80">
-            Sharp skyline, level horizon, warm sunset light.
+            Sharp skyline, level horizon, clean separation.
           </p>
         </div>
       </Float>
@@ -137,7 +137,7 @@ export default function NoirLanding({ onStart }: Props) {
         <KadrWordmark />
         <button
           onClick={onStart}
-          className="rounded-full bg-ember px-5 py-2 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+          className="rounded-full bg-ember px-5 py-2 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
         >
           Get started
         </button>
@@ -164,7 +164,7 @@ export default function NoirLanding({ onStart }: Props) {
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <button
                 onClick={onStart}
-                className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+                className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
               >
                 Analyze a video <ArrowRight size={15} />
               </button>
@@ -230,7 +230,7 @@ export default function NoirLanding({ onStart }: Props) {
           </h2>
           <button
             onClick={onStart}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-4 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-4 text-sm font-semibold text-ink transition hover:bg-[#E4E4E7]"
           >
             Try Kadr free <ArrowRight size={15} />
           </button>

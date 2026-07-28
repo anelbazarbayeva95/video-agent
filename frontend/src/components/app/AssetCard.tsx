@@ -31,7 +31,7 @@ export default function AssetCard({
       transition={{ duration: 0.7, ease: EASE }}
       whileHover={reduce ? undefined : { y: -4, scale: 1.015 }}
       className={`group relative overflow-hidden rounded-2xl border bg-white/[0.04] ${
-        selected ? "border-ember/70 shadow-[0_0_0_2px_#D9873F]" : "border-white/10 shadow-2xl"
+        selected ? "border-electric/70 shadow-[0_0_0_2px_#3D7BFF]" : "border-white/10 shadow-2xl"
       }`}
     >
       <button
@@ -60,7 +60,7 @@ export default function AssetCard({
         )}
 
         {rank != null && status === "ready" && (
-          <span className={`pointer-events-none absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${rank === 1 ? "bg-ember/90 text-ink" : "bg-black/70 text-white"}`}>
+          <span className={`pointer-events-none absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${rank === 1 ? "bg-electric text-white" : "bg-black/70 text-white"}`}>
             #{rank}
           </span>
         )}
