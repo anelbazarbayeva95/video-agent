@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Upload, ScanEye, Package } from "lucide-react";
+import { ArrowRight, Upload, ScanEye, Download } from "lucide-react";
 import { KadrWordmark } from "../Brand";
 import "../app/assetpack.css";
 
@@ -41,10 +41,14 @@ function Float({
   );
 }
 
-function Score({ v }: { v: number }) {
+function Rank({ n }: { n: number }) {
   return (
-    <span className="absolute left-1.5 top-1.5 rounded-full bg-black/65 px-1.5 py-px text-[10px] font-bold tabular-nums text-white">
-      {v}
+    <span
+      className={`absolute left-1.5 top-1.5 rounded-full px-1.5 py-px text-[10px] font-bold tabular-nums ${
+        n === 1 ? "bg-ember/90 text-ink" : "bg-black/65 text-white"
+      }`}
+    >
+      #{n}
     </span>
   );
 }
@@ -57,13 +61,13 @@ function Timecode({ t }: { t: string }) {
   );
 }
 
-/* The hero visual: one video card becoming frames, stickers, thumbnail, story */
+/* The hero visual: one clip resolving into its ranked best frames */
 function HeroMotion() {
   const card = "relative overflow-hidden rounded-xl border border-bone/10 shadow-2xl";
   return (
-    <div className="relative mx-auto h-[430px] w-full max-w-[560px] sm:h-[490px]" aria-hidden="true">
+    <div className="relative mx-auto h-[420px] w-full max-w-[560px] sm:h-[470px]" aria-hidden="true">
       {/* video card */}
-      <Float delay={0.05} className="absolute left-[13%] top-0 z-20 w-[72%]">
+      <Float delay={0.05} className="absolute left-[10%] top-0 z-20 w-[80%]">
         <div className={`${card} aspect-video`} style={{ background: G.dusk }}>
           <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-bone">
             <span className="h-1.5 w-1.5 rounded-full bg-ember" /> Source clip
@@ -72,51 +76,30 @@ function HeroMotion() {
         </div>
       </Float>
 
-      {/* best frames */}
-      <Float delay={0.25} className="absolute left-0 top-[46%] z-10 w-[26%]">
+      {/* ranked best frames */}
+      <Float delay={0.28} className="absolute left-[2%] top-[52%] z-10 w-[30%]">
         <div className={`${card} aspect-square`} style={{ background: G.ember }}>
-          <Score v={94} /><Timecode t="00:04" />
+          <Rank n={1} /><Timecode t="00:09" />
         </div>
       </Float>
-      <Float delay={0.34} className="absolute left-[29%] top-[52%] z-10 w-[26%]">
+      <Float delay={0.38} className="absolute left-[35%] top-[58%] z-10 w-[30%]">
         <div className={`${card} aspect-square`} style={{ background: G.night }}>
-          <Score v={91} /><Timecode t="00:09" />
+          <Rank n={2} /><Timecode t="00:04" />
         </div>
       </Float>
-      <Float delay={0.43} className="absolute left-[58%] top-[47%] z-10 w-[26%]">
+      <Float delay={0.48} className="absolute left-[68%] top-[52%] z-10 w-[30%]">
         <div className={`${card} aspect-square`} style={{ background: G.gold }}>
-          <Score v={88} /><Timecode t="00:12" />
+          <Rank n={3} /><Timecode t="00:12" />
         </div>
       </Float>
 
-      {/* sticker — die-cut on checkerboard */}
-      <Float delay={0.55} className="absolute right-0 top-[8%] z-30 w-[22%]">
-        <div className={`${card} sticker-checker aspect-square`}>
-          <div
-            className="absolute inset-[14%] rounded-[38%_62%_55%_45%/45%_40%_60%_55%] border-[3px] border-white"
-            style={{ background: G.ember }}
-          />
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-[0.12em] text-bone/90">
-            Sticker
-          </span>
-        </div>
-      </Float>
-
-      {/* thumbnail 16:9 */}
-      <Float delay={0.66} className="absolute bottom-[6%] left-[6%] z-20 w-[52%]">
-        <div className={`${card} aspect-video`} style={{ background: G.gold }}>
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-[0.12em] text-bone/90">
-            16:9 Thumbnail
-          </span>
-        </div>
-      </Float>
-
-      {/* story 9:16 */}
-      <Float delay={0.77} className="absolute bottom-0 right-[4%] z-20 w-[24%]">
-        <div className={`${card} aspect-[9/16]`} style={{ background: G.night }}>
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-black/60 px-1.5 py-px text-[9px] font-semibold uppercase tracking-[0.12em] text-bone/90">
-            9:16 Story
-          </span>
+      {/* analysis chip */}
+      <Float delay={0.6} className="absolute bottom-[2%] left-1/2 z-30 w-[62%] -translate-x-1/2">
+        <div className="rounded-xl border border-bone/10 bg-ash/95 px-3 py-2 shadow-2xl backdrop-blur">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-ember">Why #1</p>
+          <p className="mt-0.5 text-[11px] leading-snug text-bone/80">
+            Sharp skyline, level horizon, warm sunset light.
+          </p>
         </div>
       </Float>
     </div>
@@ -130,19 +113,19 @@ const STEPS = [
   },
   {
     icon: ScanEye, title: "Analyze", time: "~30 sec",
-    desc: "Scenes detected, every frame scored for sharpness, faces, and composition.",
+    desc: "Scenes detected, every frame scored, and the strongest moments ranked.",
   },
   {
-    icon: Package, title: "Export", time: "~5 sec",
-    desc: "Best frames, stickers, a thumbnail, and a story — one ZIP, ready to post.",
+    icon: Download, title: "Export", time: "~5 sec",
+    desc: "See why each frame was picked, then export the exact shots you want.",
   },
 ];
 
-const ASSETS = [
-  { n: "5", label: "Best frames", sub: "scored & scene-diverse" },
-  { n: "3", label: "Stickers", sub: "transparent, die-cut" },
-  { n: "1", label: "Thumbnail", sub: "16:9, subject-centered" },
-  { n: "1", label: "Story", sub: "9:16, mobile-first" },
+const EVALUATES = [
+  { label: "Sharpness", sub: "focus & motion blur" },
+  { label: "Composition", sub: "framing & balance" },
+  { label: "Faces", sub: "visibility & expression" },
+  { label: "Moment", sub: "scene-diverse picks" },
 ];
 
 export default function NoirLanding({ onStart }: Props) {
@@ -169,21 +152,21 @@ export default function NoirLanding({ onStart }: Props) {
             transition={{ duration: 0.7, ease: EASE }}
           >
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">
-              AI image toolkit
+              AI video analysis
             </p>
-            <h1 className="max-w-[14ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl" style={{ textWrap: "balance" }}>
-              Every frame, an&nbsp;asset<span className="text-ember">.</span>
+            <h1 className="max-w-[15ch] text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl" style={{ textWrap: "balance" }}>
+              Find your best frame<span className="text-ember">.</span>
             </h1>
             <p className="mt-7 max-w-[46ch] text-lg leading-relaxed text-bone/70 md:text-xl">
-              Upload one video. Kadr pulls its best frames and turns them into
-              stickers, a thumbnail, and a story cut — a complete asset pack, ready to post.
+              Upload one video. Kadr understands every frame, ranks the strongest
+              moments, and explains why — so you export the perfect shot.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <button
                 onClick={onStart}
                 className="flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-[#E39A55]"
               >
-                Upload a video <ArrowRight size={15} />
+                Analyze a video <ArrowRight size={15} />
               </button>
               <span className="text-sm text-bone/55">Free · no account needed</span>
             </div>
@@ -224,17 +207,16 @@ export default function NoirLanding({ onStart }: Props) {
 
         <div className="mx-auto max-w-6xl border-t border-bone/10 px-6" role="separator" />
 
-        {/* The pack */}
-        <section className="mx-auto max-w-6xl px-6 py-24" aria-labelledby="pack-heading">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">The asset pack</p>
-          <h2 id="pack-heading" className="mt-4 max-w-[22ch] text-4xl font-bold tracking-tight md:text-5xl">
-            One clip in. Ten assets out.
+        {/* What it evaluates */}
+        <section className="mx-auto max-w-6xl px-6 py-24" aria-labelledby="eval-heading">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-bone/60">What Kadr evaluates</p>
+          <h2 id="eval-heading" className="mt-4 max-w-[22ch] text-4xl font-bold tracking-tight md:text-5xl">
+            Every frame, ranked and explained.
           </h2>
           <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-bone/10 bg-bone/10 md:grid-cols-4">
-            {ASSETS.map((a) => (
+            {EVALUATES.map((a) => (
               <div key={a.label} className="bg-ash p-6">
-                <span className="font-mono text-4xl font-bold text-ember">{a.n}</span>
-                <p className="mt-3 text-sm font-semibold">{a.label}</p>
+                <p className="text-lg font-semibold text-ember">{a.label}</p>
                 <p className="mt-1 text-xs text-bone/60">{a.sub}</p>
               </div>
             ))}
@@ -244,7 +226,7 @@ export default function NoirLanding({ onStart }: Props) {
         {/* CTA */}
         <section className="mx-auto max-w-6xl px-6 pb-28 pt-8 text-center">
           <h2 className="mx-auto max-w-[18ch] text-4xl font-bold tracking-tight md:text-5xl" style={{ textWrap: "balance" }}>
-            Your best frames are already in the footage.
+            Your best frame is already in the footage.
           </h2>
           <button
             onClick={onStart}
@@ -258,7 +240,7 @@ export default function NoirLanding({ onStart }: Props) {
       <footer className="border-t border-bone/10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-xs text-bone/55">
           <KadrWordmark size={16} />
-          <span>Every frame, an asset · © 2026</span>
+          <span>Find your best frame · © 2026</span>
         </div>
       </footer>
     </div>

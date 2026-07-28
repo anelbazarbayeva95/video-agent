@@ -50,6 +50,7 @@ export interface BestFrame {
   scene?: FrameScene;
   label?: string;
   duration?: number; // total video length (s); optional — absent on older responses
+  analyzed?: number; // frames sampled + scored; optional
 }
 
 export async function getBestFrames(

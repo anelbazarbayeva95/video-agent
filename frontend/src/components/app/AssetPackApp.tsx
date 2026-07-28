@@ -29,18 +29,19 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState(5);
+  const [elapsed, setElapsed] = useState<number | null>(null);
   const [editor, setEditor] = useState<PreviewItem | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Analyze (or re-analyze) a file. Health-checks first so a cold/offline
-  // backend fails fast with a clear message instead of a long hang.
   const analyze = useCallback(
     async (f: File) => {
       setFrames([]);
       setSelected(0);
       setError(null);
+      setElapsed(null);
       setRunning(true);
+      const t0 = performance.now();
       try {
         if (!(await checkHealth())) {
           setError(OFFLINE_MSG);
@@ -49,6 +50,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
         const fr = await getBestFrames(f, undefined, count);
         setFrames(fr);
         setSelected(0);
+        setElapsed((performance.now() - t0) / 1000);
       } catch (err: any) {
         setError(isConnectionError(err) ? OFFLINE_MSG : err?.message || "Something went wrong.");
       } finally {
@@ -67,8 +69,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
     [analyze],
   );
 
-  // Selecting a frame drives the whole inspector: it seeks the video to that
-  // moment and updates the analysis panel.
+  // Selecting a frame drives the inspector: seek the video, update the panel.
   const selectFrame = useCallback(
     (i: number) => {
       setSelected(i);
@@ -100,6 +101,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
     setFrames([]);
     setSelected(0);
     setError(null);
+    setElapsed(null);
   }
 
   function downloadFrame(i: number) {
@@ -125,6 +127,8 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   }
 
   const current = frames[selected] ?? null;
+  const duration = frames[0]?.duration;
+  const analyzed = frames[0]?.analyzed;
 
   return (
     <div className="kadr-app min-h-screen bg-ink text-bone">
@@ -178,7 +182,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-bone/10 bg-ash px-5 py-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-bone/60">Best frames to rank</p>
-                <p className="mt-1 text-sm text-bone/55">How many top moments Kadr surfaces.</p>
+                <p className="mt-1 text-sm text-bone/55">A target — Kadr returns as many distinct strong frames as it finds.</p>
               </div>
               <select
                 value={count}
@@ -186,76 +190,92 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                 className="rounded-lg border border-bone/15 bg-ink px-3 py-2 text-sm text-bone"
               >
                 {[3, 5, 8, 12].map((n) => (
-                  <option key={n} value={n}>{n}</option>
+                  <option key={n} value={n}>up to {n}</option>
                 ))}
               </select>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            {/* Left: inspector */}
-            <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-              {videoUrl && (
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  controls
-                  className="w-full rounded-2xl border border-bone/10 bg-black"
-                />
-              )}
+          <div className="space-y-8">
+            {/* Analysis header */}
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Best frame analysis</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-bone/55">
+                {frames.length > 0 ? (
+                  <>
+                    <span><span className="text-bone/85">{frames.length}</span> recommended</span>
+                    {duration != null && <span><span className="text-bone/85">{ts(duration)}</span> clip</span>}
+                    {analyzed != null && <span><span className="text-bone/85">{analyzed}</span> frames analyzed</span>}
+                    {elapsed != null && <span>in <span className="text-bone/85">{elapsed.toFixed(1)}s</span></span>}
+                  </>
+                ) : running ? (
+                  <span>Analyzing your video…</span>
+                ) : null}
+              </div>
+            </div>
 
-              {frames.length > 0 && (
-                <SelectionTimeline frames={frames} selected={selected} onSelect={selectFrame} />
-              )}
-
-              {running && (
-                <div className="flex items-center gap-2 rounded-2xl border border-bone/10 bg-ash px-4 py-3 text-sm text-bone/70">
-                  <motion.span
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
-                    className="flex"
-                  >
-                    <Loader size={14} />
-                  </motion.span>
-                  Analyzing your video…
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                  <span>{error}</span>
-                  {file && !running && (
-                    <button
-                      onClick={() => analyze(file)}
-                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-300/40 bg-transparent px-3 py-1.5 text-xs font-medium text-red-100 transition hover:border-red-200/70 hover:text-white"
+            {/* Video hero (left) + inspector (right) */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+              <div className="space-y-4">
+                {videoUrl && (
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    controls
+                    className="w-full rounded-2xl border border-bone/10 bg-black"
+                  />
+                )}
+                {running && (
+                  <div className="flex items-center gap-2 rounded-2xl border border-bone/10 bg-ash px-4 py-3 text-sm text-bone/70">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+                      className="flex"
                     >
-                      <RotateCcw size={12} /> Retry
-                    </button>
-                  )}
-                </div>
-              )}
+                      <Loader size={14} />
+                    </motion.span>
+                    Analyzing your video…
+                  </div>
+                )}
+                {error && (
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    <span>{error}</span>
+                    {file && !running && (
+                      <button
+                        onClick={() => analyze(file)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-300/40 bg-transparent px-3 py-1.5 text-xs font-medium text-red-100 transition hover:border-red-200/70 hover:text-white"
+                      >
+                        <RotateCcw size={12} /> Retry
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {frames.length > 0 && (
-                <FrameAnalysis
-                  frame={current}
-                  rank={selected + 1}
-                  total={frames.length}
-                  onDownload={() => downloadFrame(selected)}
-                  onEdit={() => setEditor(editItem(selected))}
+              <div className="space-y-4">
+                <RankedFrames
+                  frames={frames}
+                  selected={selected}
+                  loading={running}
+                  onSelect={selectFrame}
+                  onDownload={downloadFrame}
                 />
-              )}
+                {frames.length > 0 && (
+                  <SelectionTimeline frames={frames} selected={selected} onSelect={selectFrame} />
+                )}
+              </div>
             </div>
 
-            {/* Right: ranked frames */}
-            <div className="min-w-0">
-              <RankedFrames
-                frames={frames}
-                selected={selected}
-                loading={running}
-                onSelect={selectFrame}
-                onDownload={downloadFrame}
+            {/* Frame analysis — full width */}
+            {frames.length > 0 && (
+              <FrameAnalysis
+                frame={current}
+                rank={selected + 1}
+                total={frames.length}
+                onDownload={() => downloadFrame(selected)}
+                onEdit={() => setEditor(editItem(selected))}
               />
-            </div>
+            )}
           </div>
         )}
       </main>

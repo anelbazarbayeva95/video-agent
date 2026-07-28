@@ -99,10 +99,11 @@ def _select_diverse(scenes_frames: list[list[dict]], count: int,
         round_idx += 1
     return selected
 
-FRAME_PROMPT = """You are a visual quality expert. You are given frames from a video, each labeled with its timestamp.
+FRAME_PROMPT_HEAD = """You are a visual quality expert. You are given frames from a video, each labeled with its timestamp.
 
 First, group the frames into scenes — contiguous stretches showing the same shot, setting, or action.
-Then, for each scene, select the top 1-3 candidate frames that would work as a thumbnail, social post image, or hero photo.
+Then select the strongest candidate frames that would work as a thumbnail, social post image, or hero photo.
+Aim to surface about {count} visually DISTINCT strong frames in total across the whole video — a single scene may contribute several frames when they differ meaningfully (different composition, subject, expression, or moment). Return fewer than {count} only if the video genuinely lacks that many good, different moments; never pad the list with near-duplicates of a frame you already chose.
 Prioritize: sharp focus, good composition, faces clearly visible and expressive, good lighting, no motion blur, visually interesting moments.
 
 Score every selected frame on these criteria, each 0-100:
@@ -110,8 +111,9 @@ Score every selected frame on these criteria, each 0-100:
 - face: how clearly visible, well-lit, and expressive faces are (null if no face in frame — do not penalize scenic shots)
 - composition: framing, balance, lighting, visual interest
 - score: overall quality as a standalone image, considering everything above
+"""
 
-Return ONLY valid JSON with this structure:
+FRAME_PROMPT_SCHEMA = """Return ONLY valid JSON with this structure:
 {
   "scenes": [
     {
@@ -133,6 +135,12 @@ Return ONLY valid JSON with this structure:
 }
 
 Order scenes chronologically, and frames within each scene from best to least good."""
+
+
+def frame_prompt(count: int) -> str:
+    """Build the scoring prompt, asking the model to aim for `count` distinct
+    strong frames so a high requested count actually yields more candidates."""
+    return FRAME_PROMPT_HEAD.format(count=count) + "\n" + FRAME_PROMPT_SCHEMA
 
 
 def _stderr_tail(e: ffmpeg.Error) -> str:
@@ -258,9 +266,9 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         for ts, frame_bytes in raw_frames:
             contents.append(types.Part.from_text(text=f"[Frame at {ts:.1f}s]"))
             contents.append(types.Part.from_bytes(data=frame_bytes, mime_type="image/jpeg"))
-        final_prompt = FRAME_PROMPT
+        final_prompt = frame_prompt(count)
         if custom_prompt:
-            final_prompt = f"User's preference: {custom_prompt}\n\n{FRAME_PROMPT}"
+            final_prompt = f"User's preference: {custom_prompt}\n\n{final_prompt}"
         contents.append(types.Part.from_text(text=final_prompt))
 
         response = client.models.generate_content(
@@ -319,6 +327,7 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
             closest_ts = min(frame_map.keys(), key=lambda x: abs(x - entry["timestamp"]))
             entry["image_b64"] = base64.b64encode(frame_map[closest_ts]).decode()
             entry["duration"] = round(duration, 2)
+            entry["analyzed"] = len(raw_frames)  # frames sampled + scored
 
         return selected
 

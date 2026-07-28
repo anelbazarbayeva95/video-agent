@@ -30,9 +30,9 @@ export default function RankedFrames({
         <h3 className="text-xs uppercase tracking-[0.18em] text-white/60">Best Frames</h3>
         {frames.length > 0 && <span className="text-[11px] text-white/55">{frames.length} ranked</span>}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3">
         {loading && frames.length === 0
-          ? Array.from({ length: 5 }).map((_, i) => (
+          ? Array.from({ length: 4 }).map((_, i) => (
               <AssetCard key={i} label="Analyzing…" status="generating" />
             ))
           : frames.map((f, i) => {
