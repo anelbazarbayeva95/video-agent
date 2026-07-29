@@ -61,7 +61,7 @@ export default function SelectionTimeline({
               <span
                 className={`block rounded-full transition duration-150 group-hover:scale-150 ${
                   i === selected
-                    ? "h-4 w-4 bg-electric shadow-[0_0_0_3px_#FFFFFF,0_0_0_5px_#3D7BFF]"
+                    ? "h-4 w-4 bg-electric shadow-[0_0_0_3px_#FFFFFF,0_0_0_5px_#2E6BFF]"
                     : "h-3 w-3 bg-bone shadow-[0_0_0_3px_#FFFFFF]"
                 }`}
               />
@@ -69,7 +69,7 @@ export default function SelectionTimeline({
           );
         })}
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[10px] tabular-nums text-bone/35">
+      <div className="mt-1 flex justify-between font-mono text-[10px] tabular-nums text-bone/55">
         <span>0:00</span>
         <span>{fmt(axisEnd)}</span>
       </div>

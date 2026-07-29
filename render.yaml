@@ -9,6 +9,10 @@ services:
     dockerContext: ./backend
     plan: free
     healthCheckPath: /health
+    # Don't redeploy the backend on every git push (frontend-only changes were
+    # taking it down for minutes). Deploy backend changes manually via Render's
+    # "Manual Deploy" button.
+    autoDeploy: false
     envVars:
       - key: GEMINI_API_KEY
         sync: false
