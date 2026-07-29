@@ -1,9 +1,10 @@
-// Backend base URL. Override per-deploy by setting VITE_API_URL (e.g. a
-// Hugging Face Space, Render, or Cloud Run URL) in the frontend's env — no code
-// change needed to move the backend. Falls back to the original Railway host.
+// Backend base URL. Override per-deploy by setting VITE_API_URL in the
+// frontend's env — no code change needed to move the backend. Falls back to the
+// live Render backend so production works even if the env var isn't set at
+// build time.
 const API = (
   (import.meta.env.VITE_API_URL as string | undefined) ||
-  "https://video-agent-production-9eb9.up.railway.app"
+  "https://kadr-api.onrender.com"
 ).replace(/\/+$/, "");
 
 // Is the backend reachable? Used to fail fast with a clear message before
