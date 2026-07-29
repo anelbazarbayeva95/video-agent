@@ -20,6 +20,18 @@ export async function checkHealth(timeoutMs = 8000): Promise<boolean> {
   }
 }
 
+// Poll /health until the server answers, up to `maxMs`. The free backend spins
+// down when idle and cold-starts in ~50s, so the first request should wait it
+// out (with a "waking up" message) rather than fail immediately.
+export async function waitForServer(maxMs = 75000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    if (await checkHealth(8000)) return true;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  return false;
+}
+
 // fetch() rejects with a TypeError when the request never reaches the server
 // (offline, DNS/TLS failure, CORS block, connection dropped) — as opposed to an
 // HTTP error status, which resolves normally. Lets us show a connection-specific

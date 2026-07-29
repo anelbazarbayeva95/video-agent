@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Upload, RotateCcw, Loader } from "lucide-react";
-import { getBestFrames, checkHealth, isConnectionError } from "../../api";
+import { getBestFrames, waitForServer, isConnectionError } from "../../api";
 import type { BestFrame } from "../../api";
 import SelectionTimeline from "./SelectionTimeline";
 import RankedFrames from "./RankedFrames";
@@ -35,6 +35,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   const [count, setCount] = useState(5);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [stage, setStage] = useState(0);
+  const [waking, setWaking] = useState(false);
   const [editor, setEditor] = useState<PreviewItem | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,24 +48,32 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
       setElapsed(null);
       setStage(0);
       setRunning(true);
+      setWaking(true);
       const t0 = performance.now();
-      const iv = setInterval(
-        () => setStage((s) => (s < STAGES.length - 1 ? s + 1 : s)),
-        6000,
-      );
       try {
-        if (!(await checkHealth())) {
+        // Wait out a possible cold start (free backend sleeps when idle).
+        const up = await waitForServer();
+        setWaking(false);
+        if (!up) {
           setError(OFFLINE_MSG);
           return;
         }
-        const fr = await getBestFrames(f, undefined, count);
-        setFrames(fr);
-        setSelected(0);
-        setElapsed((performance.now() - t0) / 1000);
+        const iv = setInterval(
+          () => setStage((s) => (s < STAGES.length - 1 ? s + 1 : s)),
+          6000,
+        );
+        try {
+          const fr = await getBestFrames(f, undefined, count);
+          setFrames(fr);
+          setSelected(0);
+          setElapsed((performance.now() - t0) / 1000);
+        } finally {
+          clearInterval(iv);
+        }
       } catch (err: any) {
         setError(isConnectionError(err) ? OFFLINE_MSG : err?.message || "Something went wrong.");
       } finally {
-        clearInterval(iv);
+        setWaking(false);
         setRunning(false);
       }
     },
@@ -247,19 +256,27 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                       >
                         <Loader size={14} />
                       </motion.span>
-                      {STAGES[stage]}…
+                      {waking ? "Starting the Kadr server…" : `${STAGES[stage]}…`}
                     </div>
-                    <div className="mt-3 flex gap-1.5">
-                      {STAGES.map((_, i) => (
-                        <span
-                          key={i}
-                          className={`h-1 flex-1 rounded-full ${i <= stage ? "bg-electric" : "bg-bone/15"}`}
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-2 text-xs text-bone/60">
-                      Scoring sharpness, composition, faces, and distinct moments.
-                    </p>
+                    {waking ? (
+                      <p className="mt-2 text-xs text-bone/60">
+                        The free server sleeps when idle — the first run can take up to a minute.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="mt-3 flex gap-1.5">
+                          {STAGES.map((_, i) => (
+                            <span
+                              key={i}
+                              className={`h-1 flex-1 rounded-full ${i <= stage ? "bg-electric" : "bg-bone/15"}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-2 text-xs text-bone/60">
+                          Scoring sharpness, composition, faces, and distinct moments.
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
                 {error && (
