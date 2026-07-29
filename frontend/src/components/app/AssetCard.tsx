@@ -31,7 +31,7 @@ export default function AssetCard({
       transition={{ duration: 0.7, ease: EASE }}
       whileHover={reduce ? undefined : { y: -4, scale: 1.015 }}
       className={`group relative overflow-hidden rounded-2xl border bg-bone/[0.04] ${
-        selected ? "border-electric/70 shadow-[0_0_0_2px_#3D7BFF]" : "border-bone/10 shadow-2xl"
+        selected ? "border-electric/70 shadow-[0_0_0_2px_#2E6BFF]" : "border-bone/10 shadow-2xl"
       }`}
     >
       <button

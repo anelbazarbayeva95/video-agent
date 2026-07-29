@@ -73,7 +73,7 @@ export default function FrameAnalysis({
         <div>
           <p className="mb-1.5 flex flex-wrap items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-bone/45">
             <Sparkles size={12} /> Why Kadr picked this
-            <span className="normal-case tracking-normal text-bone/30">· AI interpretation</span>
+            <span className="normal-case tracking-normal text-bone/50">· AI interpretation</span>
           </p>
           <p className="text-[15px] leading-relaxed text-bone/80">
             {frame.reason || "This frame ranked among the strongest moments in the clip."}
@@ -96,7 +96,7 @@ export default function FrameAnalysis({
           <p className="text-[11px] uppercase tracking-[0.14em] text-bone/45">Measured metrics</p>
           {metrics ? (
             <>
-              <p className="mt-0.5 text-[11px] text-bone/35">
+              <p className="mt-0.5 text-[11px] text-bone/55">
                 Computed from the pixels · sharpness is relative to this clip.
               </p>
               <div className="mt-3 space-y-2.5">
@@ -121,7 +121,7 @@ export default function FrameAnalysis({
               )}
             </>
           ) : (
-            <p className="mt-2 text-[11px] text-bone/35">Not available for this result.</p>
+            <p className="mt-2 text-[11px] text-bone/55">Not available for this result.</p>
           )}
         </div>
       </div>
