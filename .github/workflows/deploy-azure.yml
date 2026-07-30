@@ -1,0 +1,53 @@
+# Build the Kadr backend Docker image and deploy it to Azure App Service
+# (Web App for Containers). See docs/DEPLOY_AZURE.md for the one-time portal
+# setup and the two repo secrets this workflow needs.
+#
+# Flow: build backend/Dockerfile -> push to GitHub Container Registry (GHCR)
+# -> tell the Azure Web App to pull the new image.
+name: Deploy backend to Azure
+
+on:
+  workflow_dispatch:            # lets you deploy on demand from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-azure.yml"
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/kadr-api
+  # Must match the App Service Web App name you create in the portal.
+  WEBAPP_NAME: kadr-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write            # push the image to GHCR with GITHUB_TOKEN
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Deploy image to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: ${{ env.IMAGE }}:${{ github.sha }}
