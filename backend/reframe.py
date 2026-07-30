@@ -8,7 +8,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def get_client():
+    """Lazily build the Gemini client so a missing GEMINI_API_KEY doesn't crash
+    module import (which would take the whole app, including /health, down)."""
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
 
 # aspect name -> (ratio w/h, output long-side pixels)
 ASPECTS = {
@@ -27,7 +36,7 @@ region that best represents the image."""
 def _subject_box(image_bytes: bytes, w: int, h: int):
     """Return the subject bounding box in pixels, or None on failure."""
     try:
-        r = client.models.generate_content(
+        r = get_client().models.generate_content(
             model="gemini-2.5-flash",
             contents=[types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
                       types.Part.from_text(text=BOX_PROMPT)],

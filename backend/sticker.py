@@ -9,7 +9,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def get_client():
+    """Lazily build the Gemini client so a missing GEMINI_API_KEY doesn't crash
+    module import (which would take the whole app, including /health, down)."""
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
 
 IMAGE_MODEL = "gemini-2.5-flash-image"
 
@@ -183,7 +192,7 @@ def _is_clean_cutout(img: Image.Image) -> bool:
 
 
 def _gen_cutout(image_bytes: bytes, prompt: str) -> Image.Image:
-    response = client.models.generate_content(
+    response = get_client().models.generate_content(
         model=IMAGE_MODEL,
         contents=[
             types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),

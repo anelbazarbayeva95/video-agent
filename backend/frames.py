@@ -13,7 +13,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def get_client():
+    """Construct the Gemini client lazily. Building it at import time means a
+    missing/invalid GEMINI_API_KEY raises during `import frames`, which crashes
+    the whole app on boot and makes even /health return 503. Deferring it here
+    keeps import (and the health probe) working; the key is only needed when an
+    actual analysis request is served."""
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
 
 DEFAULT_COUNT = 5          # best frames returned by default (the Asset Pack set)
 MAX_COUNT = 24             # hard cap on a caller-requested count
@@ -303,7 +315,7 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
             final_prompt = f"User's preference: {custom_prompt}\n\n{final_prompt}"
         contents.append(types.Part.from_text(text=final_prompt))
 
-        response = client.models.generate_content(
+        response = get_client().models.generate_content(
             model="gemini-2.5-flash",
             contents=contents,
             config=types.GenerateContentConfig(temperature=0.2),
