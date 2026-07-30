@@ -18,6 +18,24 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 DEFAULT_COUNT = 5          # best frames returned by default (the Asset Pack set)
 MAX_COUNT = 24             # hard cap on a caller-requested count
 DUP_HAMMING = 6            # aHash distance below which two frames are near-duplicates
+SAMPLE_FRAMES = 16         # frames sampled from the video and sent to Gemini
+GEMINI_THUMB = 512         # long-side px of the thumbnails uploaded to Gemini
+
+
+def _gemini_thumb(jpeg_bytes: bytes, long_side: int = GEMINI_THUMB) -> bytes:
+    """Downscale a frame to `long_side` px on its longer edge for the Gemini
+    upload. Keeps the request light on the free tier while the full-resolution
+    original is still used for display and the deterministic metrics."""
+    im = Image.open(io.BytesIO(jpeg_bytes)).convert("RGB")
+    w, h = im.size
+    if max(w, h) > long_side:
+        if w >= h:
+            im = im.resize((long_side, max(1, round(h * long_side / w))))
+        else:
+            im = im.resize((max(1, round(w * long_side / h)), long_side))
+    buf = io.BytesIO()
+    im.save(buf, format="JPEG", quality=80)
+    return buf.getvalue()
 
 
 def _signature(jpeg_bytes: bytes) -> tuple[int, tuple[int, int, int]]:
@@ -256,12 +274,13 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         if not duration:
             raise RuntimeError("Could not determine video duration")
 
-        # Sample up to 40 frames evenly across the full duration in a single
-        # decode pass. Per-timestamp input seeking (-ss before -i) is fast but
-        # fails on many phone videos (non-zero start PTS, sparse keyframes),
-        # yielding "no packets received"; decoding once with the fps filter is
-        # slower but reliable.
-        max_frames = 40
+        # Sample a light, even set of frames across the full duration in a
+        # single decode pass. Per-timestamp input seeking (-ss before -i) is
+        # fast but fails on many phone videos (non-zero start PTS, sparse
+        # keyframes), yielding "no packets received"; decoding once with the
+        # fps filter is slower but reliable. The cap is kept low so the free
+        # tier stays responsive and the Gemini payload stays small.
+        max_frames = SAMPLE_FRAMES
         if duration <= max_frames:
             interval = 1.0
         else:
@@ -278,7 +297,8 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         contents = []
         for ts, frame_bytes in raw_frames:
             contents.append(types.Part.from_text(text=f"[Frame at {ts:.1f}s]"))
-            contents.append(types.Part.from_bytes(data=frame_bytes, mime_type="image/jpeg"))
+            contents.append(types.Part.from_bytes(
+                data=_gemini_thumb(frame_bytes), mime_type="image/jpeg"))
         final_prompt = frame_prompt(count)
         if custom_prompt:
             final_prompt = f"User's preference: {custom_prompt}\n\n{final_prompt}"
