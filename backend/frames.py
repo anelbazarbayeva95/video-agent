@@ -379,8 +379,16 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         sharps = [m["sharpness_raw"] for m in raws]
         smin, smax = (min(sharps), max(sharps)) if sharps else (0, 0)
 
+        # Map raw sharpness into a floored range so the least-sharp frame in a
+        # good set doesn't render as a bare 0 (which reads as "broken" even when
+        # the frame is perfectly usable). The relative ordering is preserved; the
+        # scale just starts at SHARPNESS_FLOOR instead of 0.
+        SHARPNESS_FLOOR = 15
+
         def _norm(v, lo, hi):
-            return 100 if hi <= lo else round((v - lo) / (hi - lo) * 100)
+            if hi <= lo:
+                return 100
+            return round(SHARPNESS_FLOOR + (v - lo) / (hi - lo) * (100 - SHARPNESS_FLOOR))
 
         for i, entry in enumerate(selected):
             m = raws[i]

@@ -65,7 +65,8 @@ export interface FrameMetrics {
 export interface BestFrame {
   timestamp: number;
   reason: string;
-  image_b64: string;
+  image_b64?: string;    // full-res JPEG from the backend (live analysis)
+  imageUrl?: string;     // pre-baked asset URL (sample demo) — used in place of image_b64
   score?: number | null;
   scores?: FrameScores;
   scene?: FrameScene;
@@ -74,6 +75,12 @@ export interface BestFrame {
   analyzed?: number; // frames sampled + scored; optional
   metrics?: FrameMetrics; // deterministic CV metrics; optional
   evidence?: string[];    // grounded, measured evidence bullets; optional
+}
+
+// Resolve a frame's displayable image source: a pre-baked asset URL (sample
+// demo) if present, otherwise the base64 JPEG returned by live analysis.
+export function frameSrc(f: BestFrame): string {
+  return f.imageUrl ?? `data:image/jpeg;base64,${f.image_b64 ?? ""}`;
 }
 
 export async function getBestFrames(

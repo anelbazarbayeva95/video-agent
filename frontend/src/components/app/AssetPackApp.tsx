@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { Upload, RotateCcw, Loader } from "lucide-react";
-import { getBestFrames, waitForServer, isConnectionError } from "../../api";
+import { Upload, RotateCcw, Loader, Sparkles } from "lucide-react";
+import { getBestFrames, waitForServer, isConnectionError, frameSrc } from "../../api";
 import type { BestFrame } from "../../api";
+import { SAMPLE_FRAMES, SAMPLE_TITLE } from "./sampleData";
 import SelectionTimeline from "./SelectionTimeline";
 import RankedFrames from "./RankedFrames";
 import FrameAnalysis from "./FrameAnalysis";
@@ -37,8 +38,23 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   const [stage, setStage] = useState(0);
   const [waking, setWaking] = useState(false);
   const [editor, setEditor] = useState<PreviewItem | null>(null);
+  const [sample, setSample] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Instant, backend-free demo: show a pre-analyzed reel so the portfolio link
+  // always presents an impressive result even if the free server is cold.
+  const loadSample = useCallback(() => {
+    setFile(null);
+    setVideoUrl(null);
+    setError(null);
+    setRunning(false);
+    setWaking(false);
+    setFrames(SAMPLE_FRAMES);
+    setSelected(0);
+    setElapsed(null);
+    setSample(true);
+  }, []);
 
   const analyze = useCallback(
     async (f: File) => {
@@ -82,6 +98,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
 
   const start = useCallback(
     (f: File) => {
+      setSample(false);
       setFile(f);
       setVideoUrl(URL.createObjectURL(f));
       analyze(f);
@@ -122,13 +139,14 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
     setSelected(0);
     setError(null);
     setElapsed(null);
+    setSample(false);
   }
 
   function downloadFrame(i: number) {
     const f = frames[i];
     if (!f) return;
     const a = document.createElement("a");
-    a.href = `data:image/jpeg;base64,${f.image_b64}`;
+    a.href = frameSrc(f);
     a.download = `frame_${i + 1}.jpg`;
     a.click();
   }
@@ -136,7 +154,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
   function editItem(i: number): PreviewItem {
     const f = frames[i];
     return {
-      url: `data:image/jpeg;base64,${f.image_b64}`,
+      url: frameSrc(f),
       label: f.label || "Moment",
       sceneLabel: f.scene?.label,
       sublabel: ts(f.timestamp),
@@ -157,7 +175,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
           <button onClick={onBack} className="border-0 bg-transparent p-0" aria-label="Back to home">
             <KadrWordmark size={18} />
           </button>
-          {file && (
+          {(file || sample) && (
             <button
               onClick={reset}
               className="flex items-center gap-1.5 rounded-full border border-bone/15 bg-transparent px-3 py-1.5 text-xs text-bone/70 transition hover:border-bone/35 hover:text-bone"
@@ -169,7 +187,7 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        {!file ? (
+        {!file && !sample ? (
           <div className="mx-auto mt-10 w-full max-w-2xl">
             <motion.button
               onClick={() => fileInput.current?.click()}
@@ -216,6 +234,20 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                 ))}
               </select>
             </div>
+
+            {/* Instant, backend-free demo — always fast, even on a cold server. */}
+            <div className="mt-4 flex flex-col items-center gap-2 text-center">
+              <span className="text-xs text-bone/45">or</span>
+              <button
+                onClick={loadSample}
+                className="flex items-center gap-2 rounded-full border border-electric/40 bg-electric/[0.08] px-5 py-2.5 text-sm font-medium text-electric transition hover:bg-electric/[0.15]"
+              >
+                <Sparkles size={14} /> Try a sample clip
+              </button>
+              <span className="text-xs text-bone/45">
+                See a pre-analyzed result instantly — no upload, no waiting.
+              </span>
+            </div>
           </div>
         ) : (
           <div className="space-y-8">
@@ -224,6 +256,14 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
               <h1 className="text-2xl font-semibold tracking-tight">Best frame analysis</h1>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-bone/60">
                 {file && <span className="max-w-[26ch] truncate font-medium text-bone/85">{file.name}</span>}
+                {sample && (
+                  <span className="flex items-center gap-2">
+                    <span className="max-w-[26ch] truncate font-medium text-bone/85">{SAMPLE_TITLE}</span>
+                    <span className="rounded-full bg-electric/15 px-2 py-0.5 text-[11px] font-semibold text-electric">
+                      Sample
+                    </span>
+                  </span>
+                )}
                 {duration != null && <span>{ts(duration)}</span>}
                 {frames.length > 0 && <span><span className="text-bone/85">{frames.length}</span> best frames</span>}
                 {analyzed != null && <span>{analyzed} frames analyzed</span>}
@@ -235,7 +275,9 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
             {/* Video hero (left) + inspector (right) */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-[0.18em] text-bone/60">Source video</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-bone/60">
+                  {sample ? "Selected frame" : "Source video"}
+                </p>
                 {videoUrl && (
                   <video
                     ref={videoRef}
@@ -245,6 +287,21 @@ export default function AssetPackApp({ onBack }: { onBack?: () => void }) {
                     // clip doesn't become a giant tower; both maxes preserve aspect.
                     className="mx-auto block max-h-[70vh] max-w-full rounded-2xl border border-bone/10 bg-black"
                   />
+                )}
+                {sample && current && (
+                  <div className="relative">
+                    <img
+                      src={frameSrc(current)}
+                      alt={current.label || "Selected frame"}
+                      className="mx-auto block max-h-[70vh] max-w-full rounded-2xl border border-bone/10 bg-black"
+                    />
+                    <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-semibold text-electric backdrop-blur">
+                      Sample · frame #{selected + 1}
+                    </span>
+                    <p className="mt-2 text-xs text-bone/50">
+                      Pre-analyzed demo — select any ranked frame to inspect it. Upload your own video for a live analysis.
+                    </p>
+                  </div>
                 )}
                 {running && (
                   <div className="rounded-2xl border border-bone/10 bg-ash px-4 py-4">
