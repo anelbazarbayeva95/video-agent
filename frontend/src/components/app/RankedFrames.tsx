@@ -1,4 +1,5 @@
 import type { BestFrame } from "../../api";
+import { frameSrc } from "../../api";
 import AssetCard from "./AssetCard";
 
 // The ranked Best Frames grid — the centerpiece of the results page. Clicking a
@@ -36,7 +37,7 @@ export default function RankedFrames({
               <AssetCard key={i} label="Analyzing…" status="generating" />
             ))
           : frames.map((f, i) => {
-              const url = `data:image/jpeg;base64,${f.image_b64}`;
+              const url = frameSrc(f);
               return (
                 <AssetCard
                   key={i}
