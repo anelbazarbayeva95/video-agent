@@ -39,6 +39,23 @@ def _signature(jpeg_bytes: bytes) -> tuple[int, tuple[int, int, int]]:
     return bits, mean
 
 
+def _thumb(jpeg_bytes: bytes, max_side: int = 512) -> bytes:
+    """Downscale a frame for the scoring model. Gemini doesn't need full
+    resolution to judge quality, and smaller images make the multimodal call
+    much faster and lighter on a small free instance. The full-resolution frame
+    is still what we return for preview/export."""
+    im = Image.open(io.BytesIO(jpeg_bytes)).convert("RGB")
+    w, h = im.size
+    if max(w, h) > max_side:
+        if w >= h:
+            im = im.resize((max_side, round(h * max_side / w)))
+        else:
+            im = im.resize((round(w * max_side / h), max_side))
+    buf = io.BytesIO()
+    im.save(buf, format="JPEG", quality=80)
+    return buf.getvalue()
+
+
 def _cv_metrics(jpeg_bytes: bytes) -> dict:
     """Deterministic, pixel-based metrics — pure Pillow, no extra dependencies.
 
@@ -256,12 +273,13 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         if not duration:
             raise RuntimeError("Could not determine video duration")
 
-        # Sample up to 40 frames evenly across the full duration in a single
-        # decode pass. Per-timestamp input seeking (-ss before -i) is fast but
-        # fails on many phone videos (non-zero start PTS, sparse keyframes),
-        # yielding "no packets received"; decoding once with the fps filter is
-        # slower but reliable.
-        max_frames = 40
+        # Sample up to 16 frames evenly across the full duration in a single
+        # decode pass. Kept modest so the whole pipeline stays fast and within
+        # memory on a small free instance. Per-timestamp input seeking (-ss
+        # before -i) is fast but fails on many phone videos (non-zero start PTS,
+        # sparse keyframes), yielding "no packets received"; decoding once with
+        # the fps filter is slower but reliable.
+        max_frames = 16
         if duration <= max_frames:
             interval = 1.0
         else:
@@ -278,7 +296,8 @@ def extract_best_frames(video_bytes: bytes, ext: str, custom_prompt: str = None,
         contents = []
         for ts, frame_bytes in raw_frames:
             contents.append(types.Part.from_text(text=f"[Frame at {ts:.1f}s]"))
-            contents.append(types.Part.from_bytes(data=frame_bytes, mime_type="image/jpeg"))
+            # Send a downscaled copy to the model; keep full-res for export.
+            contents.append(types.Part.from_bytes(data=_thumb(frame_bytes), mime_type="image/jpeg"))
         final_prompt = frame_prompt(count)
         if custom_prompt:
             final_prompt = f"User's preference: {custom_prompt}\n\n{final_prompt}"
