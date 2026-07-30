@@ -38,7 +38,8 @@ def _echo_model(canvas_bytes_holder):
 def _run(orig_size, cw, ch, ox, oy, long_side=1600):
     steps = []
     orig = Image.new("RGB", orig_size, (120, 90, 60))
-    with mock.patch.object(expand.client.models, "generate_content", _echo_model(steps)):
+    fake = _t.SimpleNamespace(models=_t.SimpleNamespace(generate_content=_echo_model(steps)))
+    with mock.patch.object(expand, "get_client", lambda: fake):
         out = expand._generate(orig, cw, ch, ox, oy, long_side)
     img = Image.open(io.BytesIO(out)).convert("RGB")
     return img, steps

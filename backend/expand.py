@@ -8,7 +8,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def get_client():
+    """Lazily build the Gemini client so a missing GEMINI_API_KEY doesn't crash
+    module import (which would take the whole app, including /health, down)."""
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return _client
 IMAGE_MODEL = "gemini-2.5-flash-image"
 
 # aspect -> (ratio w/h, output long side)
@@ -98,7 +107,7 @@ def _outpaint_step(base, add_l, add_r, add_t, add_b):
     buf = io.BytesIO()
     canvas.save(buf, format="JPEG", quality=92)
 
-    resp = client.models.generate_content(
+    resp = get_client().models.generate_content(
         model=IMAGE_MODEL,
         contents=[types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"),
                   types.Part.from_text(text=EXPAND_PROMPT)],
