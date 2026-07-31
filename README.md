@@ -1,6 +1,10 @@
 # Kadr
 
-AI image toolkit for video — upload a clip and Kadr pulls out its best frames: every frame ranked for sharpness, expression, and composition, ready to download as images or turn into stickers.
+**Kadr finds the best frame in your video, automatically.** Upload a clip, and Gemini watches it, ranks the strongest moments, and explains *why* each one was picked — sharp focus, good expression, clean composition. No more scrubbing through footage by hand to find the one frame worth keeping.
+
+**[Try the live demo →](https://video-agent-7rzs.vercel.app/)** — no upload needed, click "Try a sample clip" to see it in action instantly.
+
+![Kadr best-frame analysis screenshot](docs/screenshots/app-screenshot.png)
 
 Built with Gemini, FastAPI, and React.
 
